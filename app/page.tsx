@@ -9,14 +9,14 @@ import { ROLE_OPTIONS } from "@/lib/constants";
 // スライドショー画像
 const HERO_IMAGES = [
   "https://slvwccgxjoixxgpvpqxq.supabase.co/storage/v1/object/sign/Top_banner/VRChat_2024-09-29_14-43-36.240_1920x1080.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNTE2OWIxOS1kZTc4LTQ3M2ItYTdhNy02YjJiODUzYTQ0MjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJUb3BfYmFubmVyL1ZSQ2hhdF8yMDI0LTA5LTI5XzE0LTQzLTM2LjI0MF8xOTIweDEwODAuanBnIiwiaWF0IjoxNzY4OTkwNzgzLCJleHAiOjE4MDA1MjY3ODN9.yfNSrtZWC7x31EnJ09MGSwNy_Ak1ZvD7nmHIpvJb_Ls",
-  "https://slvwccgxjoixxgpvpqxq.supabase.co/storage/v1/object/sign/Top_banner/VRChat_2024-11-01_23-35-35.442_3840x2160.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNTE2OWIxOS1kZTc4LTQ3M2ItYTdhNy02YjJiODUzYTQ0MjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJUb3BfYmFubmVyL1ZSQ2hhdF8yMDI0LTExLTAxXzIzLTM1LTM1LjQ0Ml8zODQweDIxNjAuanBnIiwiaWF0IjoxNzY4OTkwODE1LCJleHAiOjE4MDA1MjY4MTV9.lbt7AHPQc57ThylM2GMi0S2h9nLNtBS0BOB9177fA6c",
-  "https://slvwccgxjoixxgpvpqxq.supabase.co/storage/v1/object/sign/Top_banner/VRChat_2024-11-17_01-09-52.563_3840x2160.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNTE2OWIxOS1kZTc4LTQ3M2ItYTdhNy02YjJiODUzYTQ0MjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJUb3BfYmFubmVyL1ZSQ2hhdF8yMDI0LTExLTE3XzAxLTA5LTUyLjU2M18zODQweDIxNjAuanBnIiwiaWF0IjoxNzY4OTkwODMxLCJleHAiOjE4MDA1MjY4MzF9.PWrMaPZnssLGfxGIVwoIdDNJoTotxFuvDNWlvFsJL1M",
-  "https://slvwccgxjoixxgpvpqxq.supabase.co/storage/v1/object/sign/Top_banner/VRChat_2025-11-16_00-03-00.620_3840x2160.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNTE2OWIxOS1kZTc4LTQ3M2ItYTdhNy02YjJiODUzYTQ0MjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJUb3BfYmFubmVyL1ZSQ2hhdF8yMDI1LTExLTE2XzAwLTAzLTAwLjYyMF8zODQweDIxNjAuanBnIiwiaWF0IjoxNzY4OTkxNzIxLCJleHAiOjE4MDA1Mjc3MjF9.NhJ5NlpDp9IqlK4HjgDhbRSZ19F-BbqhDWTMF6jqMHo",
+  "https://slvwccgxjoixxgpvpqxq.supabase.co/storage/v1/object/sign/Top_banner/VRChat_2024-11-01_23-35-35.442_3840x2160.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNTE2OWIxOS1kZTc4LTQ3M2ItYTdhNy02YjJiODUzYTQ0MjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJUb3BfYmFubmVyL1ZSQ2hhdF8yMDI0LTExLTAxXzIzLTM1LTM1LjQ0Ml8zODQweDIxNjAuanBnIiwiaWF0IjoxNzY4OTkwODE1LCJleHAiOjE4MDA1MjY8MTV9.lbt7AHPQc57ThylM2GMi0S2h9nLNtBS0BOB9177fA6c",
+  "https://slvwccgxjoixxgpvpqxq.supabase.co/storage/v1/object/sign/Top_banner/VRChat_2024-11-17_01-09-52.563_3840x2160.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNTE2OWIxOS1kZTc4LTQ3M2ItYTdhNy02YjJiODUzYTQ0MjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJUb3BfYmFubmVyL1ZSQ2hhdF8yMDI0LTExLTE3XzAxLTA9LTUyLjU2M18zODQweDIxNjAuanBnIiwiaWF0IjoxNzY4OTkwODMxLCJleHAiOjE4MDA1MjY4MzF9.PWrMaPZnssLGfxGIVwoIdDNJoTotxFuvDNWlvFsJL1M",
+  "https://slvwccgxjoixxgpvpqxq.supabase.co/storage/v1/object/sign/Top_banner/VRChat_2025-11-16_00-03-00.620_3840x2160.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNTE2OWIxOS1kZTc4LTQ3M2ItYTdhNy02YjJiODUzYTQ0MjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJUb3BfYmFubmVyL1ZSQ2hhdF8yMDI0LTExLTE2XzAwLTAzLTAwLjYyMF8zODQweDIxNjAuanBnIiwiaWF0IjoxNzY4OTkxNzIxLCJleHAiOjE4MDA1Mjc3MjF9.NhJ5NlpDp9IqlK4HjgDhbRSZ19F-BbqhDWTMF6jqMHo"
 ]
+
 export default function Home() {
   const router = useRouter();
   
-  // データ表示用ステート
   const [popularCasts, setPopularCasts] = useState<any[]>([]); 
   const [newCasts, setNewCasts] = useState<any[]>([]);         
   const [featuredEvents, setFeaturedEvents] = useState<any[]>([]); 
@@ -155,7 +155,8 @@ export default function Home() {
       display: "flex", 
       flexDirection: isMobileMenuOpen ? "column" : "row", 
       alignItems: isMobileMenuOpen ? "flex-start" : "center",
-      width: "100%",
+      // ★修正: PC表示(row)の時は width: auto にして広がらないようにする
+      width: isMobileMenuOpen ? "100%" : "auto",
       gap: isMobileMenuOpen ? "20px" : "24px"
     }}>
       {/* ナビゲーションリンク */}
@@ -167,9 +168,30 @@ export default function Home() {
       {/* ログイン・ユーザーボタンエリア */}
       <div style={{ width: isMobileMenuOpen ? "100%" : "auto" }}>
         {currentUser ? (
-          <div style={{ display: "flex", alignItems: "center", gap: "16px", flexDirection: isMobileMenuOpen ? "column" : "row", width: "100%" }}>
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "16px", 
+            flexDirection: isMobileMenuOpen ? "column" : "row", 
+            // ★修正: PC表示(row)の時は width: auto にする
+            width: isMobileMenuOpen ? "100%" : "auto" 
+          }}>
             <Link href="/dashboard" title="ダッシュボードへ" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", color: "inherit", width: isMobileMenuOpen ? "100%" : "auto", padding: isMobileMenuOpen ? "8px 0" : "0" }}>
-              <div className="header-avatar-container">
+              
+              {/* ▼▼▼ ここを修正！スタイルを直接指定して確実にサイズを固定する ▼▼▼ */}
+              <div 
+                className="header-avatar-container"
+                style={{ 
+                  width: "40px", 
+                  height: "40px", 
+                  borderRadius: "50%", 
+                  overflow: "hidden", 
+                  border: "2px solid #fff", 
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  flexShrink: 0, // 念のため縮小を防ぐ
+                  position: "relative"
+                }}
+              >
                 {avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={avatarUrl} alt="My Menu" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -177,12 +199,13 @@ export default function Home() {
                   <div style={{ width: "100%", height: "100%", background: "#ccc", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}>👤</div>
                 )}
               </div>
+              {/* ▲▲▲ 修正ここまで ▲▲▲ */}
+
               {isMobileMenuOpen && <span style={{ fontWeight: "bold", fontSize: "1rem" }}>マイページへ</span>}
             </Link>
             <button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className="btn btn-ghost" style={{ fontSize: "0.9rem", padding: isMobileMenuOpen ? "12px 0" : "8px 16px", textAlign: isMobileMenuOpen ? "left" : "center", width: isMobileMenuOpen ? "100%" : "auto" }}>ログアウト</button>
           </div>
         ) : (
-          /* ▼▼▼ ここを修正：モバイル時は幅100%で大きく表示 ▼▼▼ */
           <Link 
             href="/login" 
             onClick={() => setIsMobileMenuOpen(false)} 
@@ -314,8 +337,11 @@ export default function Home() {
           .mobile-menu-btn { display: block !important; }
         }
 
-        .header-avatar-container { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s; cursor: pointer; }
+        /* ここにあった .header-avatar-container のスタイルはインラインに移動しました */
+        /* ホバー効果のためにクラスだけ残しておきます */
+        .header-avatar-container { transition: transform 0.2s; cursor: pointer; }
         .header-avatar-container:hover { transform: scale(1.1); border-color: var(--accent); }
+        
         .hero-section { position: relative; padding: 100px 20px; text-align: center; overflow: hidden; background: #fdfbfb; }
         .hero-bg-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         .hero-bg-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; opacity: 0; transition: opacity 2s ease-in-out; }
