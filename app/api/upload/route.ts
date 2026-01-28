@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { v4 as uuidv4 } from "uuid"; // ※もしuuidがエラーになるなら crypto.randomUUID() を使います
 
 // R2クライアントの作成
 const R2 = new S3Client({
