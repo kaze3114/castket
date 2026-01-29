@@ -8,7 +8,7 @@ import { ROLE_OPTIONS } from "@/lib/constants";
 
 // スライドショー画像
 const HERO_IMAGES = [
-  "https://pub-0880e8d61d8d40aeb4faefabd6b5ed19.r2.dev/Top_Banner/G4-wCXbbIAA8VLJ.jpg"
+  "https://pub-0880e8d61d8d40aeb4faefabd6b5ed19.r2.dev/Top_Banner/G4-wCXbbIAA8VLJ.jpg",
   "https://pub-0880e8d61d8d40aeb4faefabd6b5ed19.r2.dev/Top_Banner/VRChat_2024-09-29_14-43-36.240_1920x1080.jpg",
   "https://pub-0880e8d61d8d40aeb4faefabd6b5ed19.r2.dev/Top_Banner/VRChat_2024-11-01_23-35-35.442_3840x2160.jpg",
   "https://pub-0880e8d61d8d40aeb4faefabd6b5ed19.r2.dev/Top_Banner/VRChat_2024-11-17_01-09-52.563_3840x2160.jpg",
