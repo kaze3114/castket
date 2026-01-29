@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+
+export async function POST(request: Request) {
+  try {
+    // ⭕️ 正解：関数の中で作る！
+    // こうすれば、実際に誰かがアクセスするまで実行されないので、ビルド時はスルーされます。
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -83,3 +88,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to send feedback" }, { status: 500 });
   }
 }
+  }
