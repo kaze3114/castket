@@ -39,3 +39,5 @@ export async function GET(request: Request) {
   // エラーならエラー画面などへ（ここではとりあえずトップへ）
   return NextResponse.redirect(`${origin}/auth/auth-code-error`);
 }
+
+//更新用
