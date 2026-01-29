@@ -9,38 +9,40 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false); // ログインか登録かの切り替えフラグ
+  
+  // モード管理: "login" | "signup" | "reset"
+  const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
+  
   const [message, setMessage] = useState("");
 
-  // ログインまたは登録処理
+  // 認証処理 (ログイン / 登録)
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
     try {
-      if (isSignUp) {
-        // 新規登録モード
+      if (mode === "signup") {
+        // 新規登録
         const { error } = await supabase.auth.signUp({
           email,
           password,
         });
         if (error) throw error;
         setMessage("登録が完了しました！自動的にログインします...");
-        // 登録成功したらそのままトップページへ
         setTimeout(() => {
           router.push("/dashboard");
           router.refresh();
         }, 1500);
+
       } else {
-        // ログインモード
+        // ログイン
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
         setMessage("ログイン成功！");
-        // ログイン成功したらトップページへ
         router.push("/dashboard");
         router.refresh();
       }
@@ -49,6 +51,35 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // パスワードリセットメール送信処理
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    try {
+      // 这里的URLは、後で作る「パスワード変更画面」への経由地です
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/update-password`,
+      });
+      
+      if (error) throw error;
+      setMessage("パスワード再設定メールを送信しました。メールボックスを確認してください。");
+      
+    } catch (error: any) {
+      setMessage(`エラー: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // タイトルの切り替え
+  const getTitle = () => {
+    if (mode === "signup") return "アカウント登録";
+    if (mode === "reset") return "パスワード再設定";
+    return "ログイン";
   };
 
   return (
@@ -70,25 +101,21 @@ export default function LoginPage() {
             C
           </div>
           <h1 className="card-title" style={{ fontSize: "1.5rem" }}>
-            {isSignUp ? "アカウント登録" : "ログイン"}
+            {getTitle()}
           </h1>
           <p className="card-text">
-            {isSignUp
-              ? "Castketで新しいリレーションを始めましょう"
-              : "おかえりなさい！"}
+            {mode === "signup" && "Castketで新しいリレーションを始めましょう"}
+            {mode === "login" && "おかえりなさい！"}
+            {mode === "reset" && "登録したメールアドレスを入力してください"}
           </p>
         </div>
 
-        <form onSubmit={handleAuth} style={{ display: "grid", gap: "16px" }}>
+        {/* --- フォームエリア --- */}
+        <form onSubmit={mode === "reset" ? handleResetPassword : handleAuth} style={{ display: "grid", gap: "16px" }}>
+          
+          {/* メールアドレス (全モードで共通) */}
           <div>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "6px",
-                fontSize: "0.85rem",
-                color: "var(--muted)",
-              }}
-            >
+            <label style={{ display: "block", marginBottom: "6px", fontSize: "0.85rem", color: "var(--muted)" }}>
               メールアドレス
             </label>
             <input
@@ -97,47 +124,49 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               style={{
-                width: "100%",
-                padding: "10px",
-                borderRadius: "8px",
-                border: "1px solid var(--border)",
-                outline: "none",
+                width: "100%", padding: "10px", borderRadius: "8px",
+                border: "1px solid var(--border)", outline: "none",
               }}
               placeholder="name@example.com"
             />
           </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "6px",
-                fontSize: "0.85rem",
-                color: "var(--muted)",
-              }}
-            >
-              パスワード
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px",
-                borderRadius: "8px",
-                border: "1px solid var(--border)",
-                outline: "none",
-              }}
-              placeholder="6文字以上で入力"
-            />
-          </div>
+
+          {/* パスワード (リセットモード以外で表示) */}
+          {mode !== "reset" && (
+            <div>
+              <div style={{display: "flex", justifyContent: "space-between", marginBottom: "6px"}}>
+                <label style={{ fontSize: "0.85rem", color: "var(--muted)" }}>
+                  パスワード
+                </label>
+                {/* ログインモードの時だけ「忘れた場合」を表示 */}
+                {mode === "login" && (
+                  <button
+                    type="button"
+                    onClick={() => { setMode("reset"); setMessage(""); }}
+                    style={{ background: "none", border: "none", color: "var(--accent)", fontSize: "0.8rem", cursor: "pointer" }}
+                  >
+                    パスワードを忘れた場合
+                  </button>
+                )}
+              </div>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px", borderRadius: "8px",
+                  border: "1px solid var(--border)", outline: "none",
+                }}
+                placeholder="6文字以上で入力"
+              />
+            </div>
+          )}
 
           {message && (
             <div
               style={{
-                padding: "10px",
-                borderRadius: "8px",
+                padding: "10px", borderRadius: "8px",
                 background: message.includes("エラー") ? "#ffecec" : "#e8fbf6",
                 color: message.includes("エラー") ? "#ff4757" : "#00b894",
                 fontSize: "0.85rem",
@@ -153,33 +182,32 @@ export default function LoginPage() {
             style={{ width: "100%", marginTop: "8px" }}
             disabled={loading}
           >
-            {loading ? "処理中..." : isSignUp ? "登録してはじめる" : "ログイン"}
+            {loading ? "処理中..." : mode === "signup" ? "登録してはじめる" : mode === "reset" ? "送信する" : "ログイン"}
           </button>
         </form>
 
-        <div
-          style={{
-            marginTop: "24px",
-            textAlign: "center",
-            fontSize: "0.85rem",
-            color: "var(--muted)",
-          }}
-        >
-          {isSignUp ? "すでにアカウントをお持ちですか？" : "アカウントをお持ちでないですか？"}{" "}
-          <button
-            type="button"
-            onClick={() => setIsSignUp(!isSignUp)}
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--accent)",
-              cursor: "pointer",
-              fontWeight: "600",
-              textDecoration: "underline",
-            }}
-          >
-            {isSignUp ? "ログインへ" : "新規登録へ"}
-          </button>
+        {/* --- モード切り替えリンク --- */}
+        <div style={{ marginTop: "24px", textAlign: "center", fontSize: "0.85rem", color: "var(--muted)" }}>
+          {mode === "reset" ? (
+            <button
+              type="button"
+              onClick={() => { setMode("login"); setMessage(""); }}
+              style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontWeight: "600", textDecoration: "underline" }}
+            >
+              ログイン画面に戻る
+            </button>
+          ) : (
+            <>
+              {mode === "signup" ? "すでにアカウントをお持ちですか？" : "アカウントをお持ちでないですか？"}{" "}
+              <button
+                type="button"
+                onClick={() => { setMode(mode === "signup" ? "login" : "signup"); setMessage(""); }}
+                style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontWeight: "600", textDecoration: "underline" }}
+              >
+                {mode === "signup" ? "ログインへ" : "新規登録へ"}
+              </button>
+            </>
+          )}
         </div>
         
         <div style={{marginTop: "16px", textAlign: "center"}}>

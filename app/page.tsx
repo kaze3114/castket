@@ -8,10 +8,10 @@ import { ROLE_OPTIONS } from "@/lib/constants";
 
 // スライドショー画像
 const HERO_IMAGES = [
-  "https://slvwccgxjoixxgpvpqxq.supabase.co/storage/v1/object/sign/Top_banner/VRChat_2024-09-29_14-43-36.240_1920x1080.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNTE2OWIxOS1kZTc4LTQ3M2ItYTdhNy02YjJiODUzYTQ0MjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJUb3BfYmFubmVyL1ZSQ2hhdF8yMDI0LTA5LTI5XzE0LTQzLTM2LjI0MF8xOTIweDEwODAuanBnIiwiaWF0IjoxNzY4OTkwNzgzLCJleHAiOjE4MDA1MjY3ODN9.yfNSrtZWC7x31EnJ09MGSwNy_Ak1ZvD7nmHIpvJb_Ls",
-  "https://slvwccgxjoixxgpvpqxq.supabase.co/storage/v1/object/sign/Top_banner/VRChat_2024-11-01_23-35-35.442_3840x2160.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNTE2OWIxOS1kZTc4LTQ3M2ItYTdhNy02YjJiODUzYTQ0MjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJUb3BfYmFubmVyL1ZSQ2hhdF8yMDI0LTExLTAxXzIzLTM1LTM1LjQ0Ml8zODQweDIxNjAuanBnIiwiaWF0IjoxNzY4OTkwODE1LCJleHAiOjE4MDA1MjY8MTV9.lbt7AHPQc57ThylM2GMi0S2h9nLNtBS0BOB9177fA6c",
-  "https://slvwccgxjoixxgpvpqxq.supabase.co/storage/v1/object/sign/Top_banner/VRChat_2024-11-17_01-09-52.563_3840x2160.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNTE2OWIxOS1kZTc4LTQ3M2ItYTdhNy02YjJiODUzYTQ0MjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJUb3BfYmFubmVyL1ZSQ2hhdF8yMDI0LTExLTE3XzAxLTA9LTUyLjU2M18zODQweDIxNjAuanBnIiwiaWF0IjoxNzY4OTkwODMxLCJleHAiOjE4MDA1MjY4MzF9.PWrMaPZnssLGfxGIVwoIdDNJoTotxFuvDNWlvFsJL1M",
-  "https://slvwccgxjoixxgpvpqxq.supabase.co/storage/v1/object/sign/Top_banner/VRChat_2025-11-16_00-03-00.620_3840x2160.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNTE2OWIxOS1kZTc4LTQ3M2ItYTdhNy02YjJiODUzYTQ0MjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJUb3BfYmFubmVyL1ZSQ2hhdF8yMDI0LTExLTE2XzAwLTAzLTAwLjYyMF8zODQweDIxNjAuanBnIiwiaWF0IjoxNzY4OTkxNzIxLCJleHAiOjE4MDA1Mjc3MjF9.NhJ5NlpDp9IqlK4HjgDhbRSZ19F-BbqhDWTMF6jqMHo",
+  "https://pub-0880e8d61d8d40aeb4faefabd6b5ed19.r2.dev/Top_Banner/VRChat_2024-09-29_14-43-36.240_1920x1080.jpg",
+  "https://pub-0880e8d61d8d40aeb4faefabd6b5ed19.r2.dev/Top_Banner/VRChat_2024-11-01_23-35-35.442_3840x2160.jpg",
+  "https://pub-0880e8d61d8d40aeb4faefabd6b5ed19.r2.dev/Top_Banner/VRChat_2024-11-17_01-09-52.563_3840x2160.jpg",
+  "https://pub-0880e8d61d8d40aeb4faefabd6b5ed19.r2.dev/Top_Banner/VRChat_2025-11-16_00-03-00.620_3840x2160.jpg",
 ]
 
 export default function Home() {
@@ -161,9 +161,15 @@ export default function Home() {
     }}>
       {/* ナビゲーションリンク */}
       <nav style={{ display: "flex", gap: "16px", flexDirection: isMobileMenuOpen ? "column" : "row", width: isMobileMenuOpen ? "100%" : "auto" }}>
-        <Link href="/feedback" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: "0.9rem", color: "#555", textDecoration: "none", fontWeight: "500", padding: isMobileMenuOpen ? "12px 0" : "0", borderBottom: isMobileMenuOpen ? "1px solid #eee" : "none", width: isMobileMenuOpen ? "100%" : "auto" }}>フィードバック</Link>
-        <Link href="/help" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: "0.9rem", color: "#555", textDecoration: "none", fontWeight: "500", padding: isMobileMenuOpen ? "12px 0" : "0", borderBottom: isMobileMenuOpen ? "1px solid #eee" : "none", width: isMobileMenuOpen ? "100%" : "auto" }}>ヘルプ</Link>
-      </nav>
+{currentUser && (
+        <Link href="/feedback" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: "0.9rem", color: "#555", textDecoration: "none", fontWeight: "500", padding: isMobileMenuOpen ? "12px 0" : "0", borderBottom: isMobileMenuOpen ? "1px solid #eee" : "none", width: isMobileMenuOpen ? "100%" : "auto" }}>
+          フィードバック
+        </Link>
+      )}
+
+      {/* ヘルプは全員に見せてもいいかも？もし隠すならここも currentUser && で囲みます */}
+      <Link href="/help" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: "0.9rem", color: "#555", textDecoration: "none", fontWeight: "500", padding: isMobileMenuOpen ? "12px 0" : "0", borderBottom: isMobileMenuOpen ? "1px solid #eee" : "none", width: isMobileMenuOpen ? "100%" : "auto" }}>ヘルプ</Link>
+    </nav>
 
       {/* ログイン・ユーザーボタンエリア */}
       <div style={{ width: isMobileMenuOpen ? "100%" : "auto" }}>
@@ -269,13 +275,12 @@ export default function Home() {
             <div className="hero-overlay"></div>
           </div>
           <div className="container hero-content">
-            <h1 className="hero-title animate-fade-up">キミの<span className="text-gradient">「舞台」</span>は、<br/>ここで見つかる。</h1>
-            <p className="hero-subtitle animate-fade-up delay-200">Castketは、クリエイターとパフォーマーをつなぐ、<br className="mobile-break" /><span className="text-highlight">VRChat特化型キャスティング・ハブ</span>です。</p>
-            <div style={{ display: "flex", justifyContent: "center", gap: "20px", flexWrap: "wrap" }}>
-              <Link href="/events" className="hero-btn btn-event">📅 イベントを探す</Link>
-              <Link href="/casts" className="hero-btn btn-cast">✨ キャストを探す</Link>
-            </div>
-          </div>
+            <h1 className="hero-title animate-fade-up">キミの<span className="text-gradient">「舞台」</span>は、<br/>ココで見つかる。</h1>
+            <p className="hero-subtitle animate-fade-up delay-200"><span className="text-highlight">イベントクリエイターとパフォーマーをつなぐ</span><br className="mobile-break" /><span className="text-highlight">VRChat特化型キャスティング・ハブ「Castket」</span></p>
+<div className="hero-btn-container">
+  <Link href="/events" className="hero-btn btn-event">📅 イベントを探す</Link>
+  <Link href="/casts" className="hero-btn btn-cast">✨ キャストを探す</Link>
+</div>          </div>
         </section>
 
         <div className="container section">
@@ -342,14 +347,6 @@ export default function Home() {
         .header-avatar-container { transition: transform 0.2s; cursor: pointer; }
         .header-avatar-container:hover { transform: scale(1.1); border-color: var(--accent); }
         
-        .hero-section { position: relative; padding: 100px 20px; text-align: center; overflow: hidden; background: #fdfbfb; }
-        .hero-bg-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        .hero-bg-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; opacity: 0; transition: opacity 2s ease-in-out; }
-        .hero-bg-slide.active { opacity: 1; }
-        .hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.75); z-index: 2; }
-        .hero-content { position: relative; z-index: 10; }
-        .hero-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 24px; color: #333; line-height: 1.3; }
-        .hero-subtitle { font-size: 1.1rem; color: #444; margin-bottom: 40px; font-weight: 500; }
         .two-col-grid { display: grid; grid-template-columns: 1fr; gap: 40px; }
         @media (min-width: 768px) { .two-col-grid { grid-template-columns: 1fr 1fr; } }
       `}</style>
