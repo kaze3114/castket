@@ -915,3 +915,69 @@ position: absolute;
 .event-card.compact-view .card-desc {
   display: none; /* 長い説明文も消す */
 }
+
+/* =========================================
+   エラーページ用スタイル
+   ========================================= */
+
+.error-container {
+  padding: 40px;
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.error-title {
+  font-size: 1.5rem;
+  margin-bottom: 24px;
+  color: #ff4757;
+  font-weight: bold;
+}
+
+.error-text {
+  color: var(--muted);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+/* 画像のラッパー：ここで光彩（ドロップシャドウ）をつける */
+.image-wrapper {
+  margin-bottom: 24px;
+  /* 白い光彩をつけて、神々しく（？）する */
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
+}
+
+/* 画像本体のスタイル */
+.soft-circle-image {
+  /* ▼ここが重要！画像を潰さない設定▼ */
+  width: 250px;       /* 枠の幅 */
+  height: 250px;      /* 枠の高さ（正方形にする） */
+  object-fit: cover;  /* 画像の比率を維持したまま、枠いっぱいに広げる（はみ出た分はカット） */
+  
+  border-radius: 50%; /* 丸くする */
+  
+  /* 周りをぼんやりさせるマスク */
+  -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 70%);
+  mask-image: radial-gradient(circle at center, black 40%, transparent 70%);
+}
+
+/* アニメーション定義 */
+.fade-in {
+  animation: fadeIn 1s ease-out forwards; /* forwardsで最後のアニメーション状態を維持 */
+  opacity: 0; /* 最初は隠しておく */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
