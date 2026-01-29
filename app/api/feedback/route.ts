@@ -2,32 +2,28 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// ★ここには何も書かないでください！ (変数の初期化は関数の中でやります)
 
 export async function POST(request: Request) {
   try {
-    // ⭕️ 正解：関数の中で作る！
-    // こうすれば、実際に誰かがアクセスするまで実行されないので、ビルド時はスルーされます。
+    // 1. クライアントの作成 (リクエストが来たタイミングで作る)
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
-export async function POST(request: Request) {
-  try {
     const body = await request.json();
     const { user_id, category, content, page_url } = body;
 
-    console.log("AI判定を開始します: ", content); // ★ログ追加
+    console.log("AI判定を開始します: ", content);
 
-    // 1. AIによるモデレーション（毒舌判定・厳格モード）
+    // 2. AIによるモデレーション
     let status = "open"; 
     
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
       
-      // ★修正: プロンプトを強化して、煽りや嘲笑も許さないようにする
       const prompt = `
         あなたはWebサービスの厳格なコンテンツモデレーターです。
         以下のフィードバック内容を分析し、少しでも「悪意」「嘲笑」「攻撃性」「不快感」が含まれる場合は有害と判定してください。
@@ -49,7 +45,7 @@ export async function POST(request: Request) {
       const response = await result.response;
       const text = response.text();
       
-      console.log("AIの回答 raw:", text); // ★AIが何を言ったかログで見る
+      console.log("AIの回答 raw:", text);
 
       const jsonStr = text.replace(/```json|```/g, "").trim();
       const analysis = JSON.parse(jsonStr);
@@ -64,11 +60,9 @@ export async function POST(request: Request) {
     } catch (e) {
       console.error("!! AI判定中にエラーが発生しました !!");
       console.error(e);
-      // エラーが出た場合、念のため人間が確認できるよう 'attention' に倒す手もありますが、
-      // まずはログを見て原因（APIキーミスなど）を特定しましょう。
     }
 
-    // 2. Supabaseに保存
+    // 3. Supabaseに保存
     const { error } = await supabase
       .from("feedbacks")
       .insert({
@@ -88,4 +82,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to send feedback" }, { status: 500 });
   }
 }
-  }
