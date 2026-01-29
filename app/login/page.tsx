@@ -60,16 +60,15 @@ export default function LoginPage() {
     setMessage("");
 
     try {
-      // 这里的URLは、後で作る「パスワード変更画面」への経由地です
+      // URLは、後で作る「パスワード変更画面」への経由地です
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?next=/update-password`,
+        redirectTo: `${window.location.origin}/update-password`,
       });
       
       if (error) throw error;
       setMessage("パスワード再設定メールを送信しました。メールボックスを確認してください。");
       
-    } catch (error: any) {
-      setMessage(`エラー: ${error.message}`);
+    } catch (error: any) {      setMessage(`エラー: ${error.message}`);
     } finally {
       setLoading(false);
     }
