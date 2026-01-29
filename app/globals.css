@@ -961,8 +961,8 @@ position: absolute;
   border-radius: 50%; /* 丸くする */
   
   /* 周りをぼんやりさせるマスク */
-  -webkit-mask-image: radial-gradient(circle at center, black 20%, transparent 70%);
-  mask-image: radial-gradient(circle at center, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(circle at center, black 50%, transparent 85%);
+  mask-image: radial-gradient(circle at center, black 50%, transparent 85%);
 }
 
 /* アニメーション定義 */
