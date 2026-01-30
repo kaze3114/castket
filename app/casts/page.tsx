@@ -13,7 +13,6 @@ const PLAY_STYLE_OPTIONS = [
   "その他 / 移行中",
 ];
 
-// ★ 1ページあたりの表示人数
 const ITEMS_PER_PAGE = 24;
 
 export default function CastListPage() {
@@ -27,13 +26,19 @@ export default function CastListPage() {
   const [filterPlayStyle, setFilterPlayStyle] = useState<string | null>(null);
   const [searchName, setSearchName] = useState<string>("");
 
-  // ★ 追加: 現在のページ番号 (1からスタート)
   const [currentPage, setCurrentPage] = useState(1);
 
   const getRoleLabel = (value: string | null) => {
     if (!value) return null;
     const found = ROLE_OPTIONS.find((opt) => opt.value === value);
     return found ? found.label : value;
+  };
+
+  // ★追加: 新着ユーザーかどうか判定する関数 (7日以内)
+  const isNewMember = (createdAt: string) => {
+    const diff = new Date().getTime() - new Date(createdAt).getTime();
+    const days = diff / (1000 * 60 * 60 * 24);
+    return days < 7;
   };
 
   useEffect(() => {
@@ -58,13 +63,10 @@ export default function CastListPage() {
     fetchCasts();
   }, []);
 
-  // フィルター条件が変わったら、ページを1に戻す
   useEffect(() => {
     setCurrentPage(1);
   }, [filterRole, filterPlayStyle, searchName, sortBy]);
 
-
-  // 1. 絞り込み
   const filteredCasts = casts.filter((cast) => {
     if (filterRole) {
       const hitMain = cast.role === filterRole;
@@ -77,7 +79,6 @@ export default function CastListPage() {
     return true;
   });
 
-  // 2. 並べ替え
   const sortedCasts = [...filteredCasts].sort((a, b) => {
     if (filterRole) {
       const getPriority = (cast: any) => {
@@ -95,11 +96,9 @@ export default function CastListPage() {
     return 0;
   });
 
-  // ★ 3. ページネーション処理 (ここが新しい！)
   const totalItems = sortedCasts.length;
   const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
   
-  // 現在のページに表示すべきデータだけを切り出す
   const currentCasts = sortedCasts.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
@@ -111,14 +110,10 @@ export default function CastListPage() {
     setSearchName("");
   };
 
-  // ページ切り替え関数
   const goToPage = (page: number) => {
     setCurrentPage(page);
-    // ページを変えたら一番上までスクロールすると親切
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  if (loading) return <div style={{ padding: "40px", textAlign: "center" }}>読み込み中...</div>;
 
   return (
     <>
@@ -132,7 +127,8 @@ export default function CastListPage() {
             </div>
           </Link>
           <div className="header-actions">
-            <Link href="/dashboard" className="btn btn-ghost">マイページへ</Link>
+            {/* ★修正: マイページへ → ダッシュボードへ */}
+            <Link href="/dashboard" className="btn btn-ghost">ダッシュボードへ</Link>
           </div>
         </div>
       </header>
@@ -201,8 +197,21 @@ export default function CastListPage() {
             </div>
           </div>
           
-          {/* ▼▼▼ リスト描画 (currentCasts を使う) ▼▼▼ */}
-          {currentCasts.length === 0 ? (
+          {/* ▼▼▼ ローディング中は「スケルトン」を表示する処理に変更 ▼▼▼ */}
+          {loading ? (
+             <div style={{ display: "grid", gap: "16px", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}>
+                {/* 12個くらいダミーの箱を表示しておく */}
+                {[...Array(12)].map((_, i) => (
+                  <div key={i} className="card skeleton-card" style={{ height: "280px", padding: 0 }}>
+                    <div className="skeleton-image"></div>
+                    <div style={{ padding: "12px" }}>
+                      <div className="skeleton-text" style={{ width: "60%" }}></div>
+                      <div className="skeleton-text" style={{ width: "40%", marginTop: "8px" }}></div>
+                    </div>
+                  </div>
+                ))}
+             </div>
+          ) : currentCasts.length === 0 ? (
             <div className="card" style={{ textAlign: "center", padding: "60px" }}>
               <p>条件に一致するキャストは見つかりませんでした。</p>
               <button onClick={clearFilters} className="btn btn-ghost" style={{ marginTop: "16px" }}>条件をリセットする</button>
@@ -215,13 +224,15 @@ export default function CastListPage() {
                   display: "grid", 
                   gap: "16px",
                   gridTemplateColumns: viewMode === "grid" ? "repeat(auto-fill, minmax(180px, 1fr))" : undefined,
-                  marginBottom: "40px" // ページネーション用の余白
+                  marginBottom: "40px"
                 }}
               >
                 {currentCasts.map((cast) => {
                   const isMainHit = filterRole && cast.role === filterRole;
                   const isSubHit1 = filterRole && cast.sub_role_1 === filterRole;
                   const isSubHit2 = filterRole && cast.sub_role_2 === filterRole;
+                  // ★追加: 新着判定
+                  const isNew = isNewMember(cast.created_at);
 
                   return (
                     <Link href={`/casts/${cast.user_id}`} key={cast.id} style={{ textDecoration: "none", color: "inherit" }}>
@@ -239,6 +250,8 @@ export default function CastListPage() {
                       >
                         {viewMode !== "compact" && (
                           <div className="card-image" style={{ width: "100%", aspectRatio: "1/1", background: "#f9f9f9", position: "relative", borderBottom: "1px solid #f0f0f0" }}>
+                            
+                            {/* ロールバッジ */}
                             {cast.role && (
                                <div style={{ position: "absolute", top: "4px", left: "4px", zIndex: 2 }}>
                                  <span style={{ 
@@ -249,6 +262,14 @@ export default function CastListPage() {
                                  </span>
                                </div>
                             )}
+
+                            {/* ★追加: NEWバッジ (右上に表示) */}
+                            {isNew && (
+                               <div style={{ position: "absolute", top: "4px", right: "4px", zIndex: 2 }}>
+                                 <span className="new-badge">🔰 NEW</span>
+                               </div>
+                            )}
+
                             {cast.avatar_url ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={cast.avatar_url} alt={cast.display_name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -305,26 +326,15 @@ export default function CastListPage() {
                 })}
               </div>
 
-              {/* ▼▼▼ ページネーション UI ▼▼▼ */}
               {totalPages > 1 && (
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "16px", marginTop: "24px" }}>
-                  <button 
-                    onClick={() => goToPage(currentPage - 1)} 
-                    disabled={currentPage === 1}
-                    className="pagination-btn"
-                  >
+                  <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="pagination-btn">
                     &lt; 前へ
                   </button>
-                  
                   <span style={{ fontWeight: "bold", color: "#555" }}>
                     {currentPage} / {totalPages}
                   </span>
-                  
-                  <button 
-                    onClick={() => goToPage(currentPage + 1)} 
-                    disabled={currentPage === totalPages}
-                    className="pagination-btn"
-                  >
+                  <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="pagination-btn">
                     次へ &gt;
                   </button>
                 </div>
@@ -335,6 +345,40 @@ export default function CastListPage() {
       </main>
 
       <style jsx>{`
+        /* スケルトンローディングのアニメーション */
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .skeleton-card {
+          border: 1px solid #eee;
+          background: #fff;
+          overflow: hidden;
+        }
+        .skeleton-image {
+          width: 100%;
+          aspect-ratio: 1/1;
+          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite;
+        }
+        .skeleton-text {
+          height: 12px;
+          background: #eee;
+          border-radius: 4px;
+        }
+
+        /* NEWバッジ */
+        .new-badge {
+            background: #22c55e;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
         .pagination-btn {
           padding: 8px 16px;
           border: 1px solid #ddd;

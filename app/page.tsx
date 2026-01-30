@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+// Imageコンポーネントは不要になったので削除してもOKですが、EventCardなどで使うなら残しておいてください
 import { useRouter } from "next/navigation";
 import { ROLE_OPTIONS } from "@/lib/constants";
 
@@ -15,14 +16,13 @@ const HERO_IMAGES = [
   "https://pub-0880e8d61d8d40aeb4faefabd6b5ed19.r2.dev/Top_Banner/VRChat_2025-11-16_00-03-00.620_3840x2160.jpg",
   "https://pub-0880e8d61d8d40aeb4faefabd6b5ed19.r2.dev/Top_Banner/VRChat_2025-05-25_04-14-19.218_3840x2160.jpg",
   "https://pub-0880e8d61d8d40aeb4faefabd6b5ed19.r2.dev/Top_Banner/VRChat_2025-10-15_23-49-35.528_2560x1440.jpg",
-  ""
-]
+];
 
 export default function Home() {
   const router = useRouter();
   
   const [popularCasts, setPopularCasts] = useState<any[]>([]); 
-  const [newCasts, setNewCasts] = useState<any[]>([]);         
+  const [newCasts, setNewCasts] = useState<any[]>([]);        
   const [featuredEvents, setFeaturedEvents] = useState<any[]>([]); 
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]); 
   const [newsList, setNewsList] = useState<any[]>([]);
@@ -153,29 +153,29 @@ export default function Home() {
     </Link>
   );
 
-  // ★モバイルメニューとPCメニューの中身（スタイル調整済み）
   const MenuContent = () => (
     <div style={{ 
       display: "flex", 
       flexDirection: isMobileMenuOpen ? "column" : "row", 
       alignItems: isMobileMenuOpen ? "flex-start" : "center",
-      // ★修正: PC表示(row)の時は width: auto にして広がらないようにする
       width: isMobileMenuOpen ? "100%" : "auto",
       gap: isMobileMenuOpen ? "20px" : "24px"
     }}>
-      {/* ナビゲーションリンク */}
       <nav style={{ display: "flex", gap: "16px", flexDirection: isMobileMenuOpen ? "column" : "row", width: isMobileMenuOpen ? "100%" : "auto" }}>
-{currentUser && (
-        <Link href="/feedback" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: "0.9rem", color: "#555", textDecoration: "none", fontWeight: "500", padding: isMobileMenuOpen ? "12px 0" : "0", borderBottom: isMobileMenuOpen ? "1px solid #eee" : "none", width: isMobileMenuOpen ? "100%" : "auto" }}>
-          フィードバック
+        {/* ▼▼▼ 追加: 使い方ページへのリンク ▼▼▼ */}
+        <Link href="/how-to" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: "0.9rem", color: "#555", textDecoration: "none", fontWeight: "500", padding: isMobileMenuOpen ? "12px 0" : "0", borderBottom: isMobileMenuOpen ? "1px solid #eee" : "none", width: isMobileMenuOpen ? "100%" : "auto" }}>
+          使い方
         </Link>
-      )}
+        {/* ▲▲▲ 追加ここまで ▲▲▲ */}
 
-      {/* ヘルプは全員に見せてもいいかも？もし隠すならここも currentUser && で囲みます */}
-      <Link href="/help" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: "0.9rem", color: "#555", textDecoration: "none", fontWeight: "500", padding: isMobileMenuOpen ? "12px 0" : "0", borderBottom: isMobileMenuOpen ? "1px solid #eee" : "none", width: isMobileMenuOpen ? "100%" : "auto" }}>ヘルプ</Link>
-    </nav>
+        {currentUser && (
+          <Link href="/feedback" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: "0.9rem", color: "#555", textDecoration: "none", fontWeight: "500", padding: isMobileMenuOpen ? "12px 0" : "0", borderBottom: isMobileMenuOpen ? "1px solid #eee" : "none", width: isMobileMenuOpen ? "100%" : "auto" }}>
+            フィードバック
+          </Link>
+        )}
+        <Link href="/help" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: "0.9rem", color: "#555", textDecoration: "none", fontWeight: "500", padding: isMobileMenuOpen ? "12px 0" : "0", borderBottom: isMobileMenuOpen ? "1px solid #eee" : "none", width: isMobileMenuOpen ? "100%" : "auto" }}>ヘルプ</Link>
+      </nav>
 
-      {/* ログイン・ユーザーボタンエリア */}
       <div style={{ width: isMobileMenuOpen ? "100%" : "auto" }}>
         {currentUser ? (
           <div style={{ 
@@ -183,24 +183,12 @@ export default function Home() {
             alignItems: "center", 
             gap: "16px", 
             flexDirection: isMobileMenuOpen ? "column" : "row", 
-            // ★修正: PC表示(row)の時は width: auto にする
             width: isMobileMenuOpen ? "100%" : "auto" 
           }}>
             <Link href="/dashboard" title="ダッシュボードへ" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", color: "inherit", width: isMobileMenuOpen ? "100%" : "auto", padding: isMobileMenuOpen ? "8px 0" : "0" }}>
-              
-              {/* ▼▼▼ ここを修正！スタイルを直接指定して確実にサイズを固定する ▼▼▼ */}
               <div 
                 className="header-avatar-container"
-                style={{ 
-                  width: "40px", 
-                  height: "40px", 
-                  borderRadius: "50%", 
-                  overflow: "hidden", 
-                  border: "2px solid #fff", 
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                  flexShrink: 0, // 念のため縮小を防ぐ
-                  position: "relative"
-                }}
+                style={{ width: "40px", height: "40px", borderRadius: "50%", overflow: "hidden", border: "2px solid #fff", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", flexShrink: 0, position: "relative" }}
               >
                 {avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -209,9 +197,7 @@ export default function Home() {
                   <div style={{ width: "100%", height: "100%", background: "#ccc", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}>👤</div>
                 )}
               </div>
-              {/* ▲▲▲ 修正ここまで ▲▲▲ */}
-
-              {isMobileMenuOpen && <span style={{ fontWeight: "bold", fontSize: "1rem" }}>マイページへ</span>}
+              {isMobileMenuOpen && <span style={{ fontWeight: "bold", fontSize: "1rem" }}>ダッシュボードへ</span>}
             </Link>
             <button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className="btn btn-ghost" style={{ fontSize: "0.9rem", padding: isMobileMenuOpen ? "12px 0" : "8px 16px", textAlign: isMobileMenuOpen ? "left" : "center", width: isMobileMenuOpen ? "100%" : "auto" }}>ログアウト</button>
           </div>
@@ -244,28 +230,23 @@ export default function Home() {
             <div className="logo-mark">C</div>
             <div className="logo-text-block"><div className="logo-text-main">Castket</div><div className="logo-text-sub">VRChat Event Platform</div></div>
           </Link>
-          
-          {/* PC用メニュー */}
           <div className="pc-menu" style={{ display: "flex", alignItems: "center" }}>
             <MenuContent />
           </div>
-
-          {/* スマホ用ハンバーガーボタン */}
           <button className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(true)}>
-             <span style={{ fontSize: "1.5rem" }}>≡</span>
+              <span style={{ fontSize: "1.5rem" }}>≡</span>
           </button>
         </div>
       </header>
 
-      {/* モバイルメニューオーバーレイ */}
       {isMobileMenuOpen && (
         <div className="mobile-menu-overlay">
           <div className="mobile-menu-content">
-             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px", borderBottom: "1px solid #eee", paddingBottom: "16px" }}>
-               <span style={{ fontWeight: "bold", fontSize: "1.2rem" }}>Menu</span>
-               <button onClick={() => setIsMobileMenuOpen(false)} style={{ background: "none", border: "none", fontSize: "1.8rem", cursor: "pointer", padding: "0 8px" }}>×</button>
-             </div>
-             <MenuContent />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px", borderBottom: "1px solid #eee", paddingBottom: "16px" }}>
+                <span style={{ fontWeight: "bold", fontSize: "1.2rem" }}>Menu</span>
+                <button onClick={() => setIsMobileMenuOpen(false)} style={{ background: "none", border: "none", fontSize: "1.8rem", cursor: "pointer", padding: "0 8px" }}>×</button>
+              </div>
+              <MenuContent />
           </div>
         </div>
       )}
@@ -281,11 +262,14 @@ export default function Home() {
           <div className="container hero-content">
             <h1 className="hero-title animate-fade-up">キミの<span className="text-gradient">「舞台」</span>は、<br/>ココで見つかる。</h1>
             <p className="hero-subtitle animate-fade-up delay-200"><span className="text-highlight">イベントクリエイターとパフォーマーをつなぐ</span><br className="mobile-break" /><span className="text-highlight">VRChat特化型キャスティング・ハブ「Castket」</span></p>
-<div className="hero-btn-container">
-  <Link href="/events" className="hero-btn btn-event">📅 イベントを探す</Link>
-  <Link href="/casts" className="hero-btn btn-cast">✨ キャストを探す</Link>
-</div>          </div>
+            <div className="hero-btn-container">
+              <Link href="/events" className="hero-btn btn-event">📅 イベントを探す</Link>
+              <Link href="/casts" className="hero-btn btn-cast">✨ キャストを探す</Link>
+            </div>
+          </div>
         </section>
+
+        {/* 以前ここにあった How to Use セクションは削除済み */}
 
         <div className="container section">
           {newsList.length > 0 && (
@@ -346,8 +330,6 @@ export default function Home() {
           .mobile-menu-btn { display: block !important; }
         }
 
-        /* ここにあった .header-avatar-container のスタイルはインラインに移動しました */
-        /* ホバー効果のためにクラスだけ残しておきます */
         .header-avatar-container { transition: transform 0.2s; cursor: pointer; }
         .header-avatar-container:hover { transform: scale(1.1); border-color: var(--accent); }
         
