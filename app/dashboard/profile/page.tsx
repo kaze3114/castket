@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { checkUserRestriction } from "@/app/actions/moderate";import { ROLE_OPTIONS } from "@/lib/constants";
+import { checkUserRestriction } from "@/app/actions/moderate";
+import { ROLE_OPTIONS } from "@/lib/constants";
 
 const PLAY_STYLE_OPTIONS = [
   "デスクトップモード",
@@ -35,7 +36,7 @@ export default function EditProfilePage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null); // アップロード待ちファイル
   const originalAvatarUrl = useRef<string>(""); // 元の画像URL（削除用）
 
-  // ★追加: ポートフォリオ（ギャラリー）関連ステート
+  // ポートフォリオ（ギャラリー）関連ステート
   const [portfolioImages, setPortfolioImages] = useState<any[]>([]);
   const [isGalleryUploading, setIsGalleryUploading] = useState(false);
 
@@ -68,7 +69,7 @@ export default function EditProfilePage() {
         originalAvatarUrl.current = currentUrl;
       }
 
-      // 2. ★追加: ポートフォリオ画像の取得
+      // 2. ポートフォリオ画像の取得
       const { data: images } = await supabase
         .from("portfolio_images")
         .select("*")
@@ -87,7 +88,6 @@ export default function EditProfilePage() {
 
   // 画像削除APIを呼び出す関数
   const deleteImageFromR2 = async (url: string) => {
-    // 修正済み: ガード節を緩くして、確実に削除リクエストを送るようにしています
     if (!url) return;
     try {
       await fetch("/api/delete-image", {
@@ -131,10 +131,11 @@ export default function EditProfilePage() {
     setIsCompressing(true);
 
     try {
-      const imageCompression = (await import("browser-image-compression")).default;
+      // ★修正: 自作のユーティリティを動的インポート
+      const { compressImage } = await import("@/app/utils/imageCompressor");
 
-      const options = { maxSizeMB: 0.5, maxWidthOrHeight: 500, useWebWorker: true };
-      const compressedFile = await imageCompression(file, options);
+      // アバター用に圧縮
+      const compressedFile = await compressImage(file, "avatar");
 
       setAvatarFile(compressedFile);
       const localUrl = URL.createObjectURL(compressedFile);
@@ -148,7 +149,7 @@ export default function EditProfilePage() {
     }
   };
 
-  // ★追加: ギャラリー画像のアップロード（選択即アップロード）
+  // ギャラリー画像のアップロード（選択即アップロード）
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     if (portfolioImages.length >= 4) {
@@ -160,15 +161,15 @@ export default function EditProfilePage() {
     const file = e.target.files[0];
     
     try {
-      // 1. R2にアップロード (既存の関数を再利用)
-      // ポートフォリオ用なので少し画質良くてもOK (1MB制限)
-      const imageCompression = (await import("browser-image-compression")).default;
-      const options = { maxSizeMB: 1, maxWidthOrHeight: 1280, useWebWorker: true };
-      const compressedFile = await imageCompression(file, options);
+      // ★修正: 自作のユーティリティを動的インポート
+      const { compressImage } = await import("@/app/utils/imageCompressor");
+
+      // ギャラリー用に圧縮
+      const compressedFile = await compressImage(file, "gallery");
       
       const publicUrl = await uploadImageToR2(compressedFile);
   
-      // 2. DBに保存
+      // DBに保存
       const { data, error } = await supabase
         .from("portfolio_images")
         .insert({
@@ -180,7 +181,7 @@ export default function EditProfilePage() {
   
       if (error) throw error;
   
-      // 3. 画面に即反映
+      // 画面に即反映
       setPortfolioImages([...portfolioImages, data]);
   
     } catch (error: any) {
@@ -191,7 +192,7 @@ export default function EditProfilePage() {
     }
   };
   
-  // ★追加: ギャラリー画像の削除
+  // ギャラリー画像の削除
   const handleDeleteGalleryImage = async (imageId: string, imageUrl: string) => {
     if (!confirm("この画像を削除しますか？")) return;
   
@@ -330,7 +331,7 @@ export default function EditProfilePage() {
             <textarea className="input-field" rows={6} value={bio} onChange={(e) => setBio(e.target.value)} placeholder="活動可能時間や、得意なこと、過去の実績などを書いてみましょう！"/>
           </div>
 
-          {/* ★追加: ギャラリーエリア */}
+          {/* ギャラリーエリア */}
           <div style={{ marginTop: "20px", borderTop: "1px solid #eee", paddingTop: "24px" }}>
             <label className="label-title">ポートフォリオ / 活動写真 (最大4枚)</label>
             <p style={{ fontSize: "0.85rem", color: "var(--muted)", marginBottom: "16px" }}>
