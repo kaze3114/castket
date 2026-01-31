@@ -131,7 +131,7 @@ export default function EditProfilePage() {
     setIsCompressing(true);
 
     try {
-const imageCompression = (await import("browser-image-compression")).default;
+      const imageCompression = (await import("browser-image-compression")).default;
 
       const options = { maxSizeMB: 0.5, maxWidthOrHeight: 500, useWebWorker: true };
       const compressedFile = await imageCompression(file, options);
@@ -162,7 +162,7 @@ const imageCompression = (await import("browser-image-compression")).default;
     try {
       // 1. R2にアップロード (既存の関数を再利用)
       // ポートフォリオ用なので少し画質良くてもOK (1MB制限)
-const imageCompression = (await import("browser-image-compression")).default;
+      const imageCompression = (await import("browser-image-compression")).default;
       const options = { maxSizeMB: 1, maxWidthOrHeight: 1280, useWebWorker: true };
       const compressedFile = await imageCompression(file, options);
       
