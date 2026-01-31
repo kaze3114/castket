@@ -3,9 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { checkUserRestriction } from "@/app/actions/moderate";
-import imageCompression from "browser-image-compression";
-import { ROLE_OPTIONS } from "@/lib/constants";
+import { checkUserRestriction } from "@/app/actions/moderate";import { ROLE_OPTIONS } from "@/lib/constants";
 
 const PLAY_STYLE_OPTIONS = [
   "デスクトップモード",
@@ -133,6 +131,8 @@ export default function EditProfilePage() {
     setIsCompressing(true);
 
     try {
+const imageCompression = (await import("browser-image-compression")).default;
+
       const options = { maxSizeMB: 0.5, maxWidthOrHeight: 500, useWebWorker: true };
       const compressedFile = await imageCompression(file, options);
 
@@ -162,6 +162,7 @@ export default function EditProfilePage() {
     try {
       // 1. R2にアップロード (既存の関数を再利用)
       // ポートフォリオ用なので少し画質良くてもOK (1MB制限)
+const imageCompression = (await import("browser-image-compression")).default;
       const options = { maxSizeMB: 1, maxWidthOrHeight: 1280, useWebWorker: true };
       const compressedFile = await imageCompression(file, options);
       
