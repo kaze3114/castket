@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 export default function EventEntryManager() {
   const params = useParams();
@@ -30,13 +31,13 @@ export default function EventEntryManager() {
         .single();
 
       if (eventError || !eventData) {
-        alert("イベントが見つかりません");
+        toast.error("イベントが見つかりません");
         router.push("/dashboard/events");
         return;
       }
 
       if (eventData.organizer_id !== user.id) {
-        alert("権限がありません");
+        toast.error("権限がありません");
         router.push("/dashboard");
         return;
       }
@@ -95,10 +96,10 @@ export default function EventEntryManager() {
         e.id === entryId ? { ...e, status: newStatus } : e
       ));
       
-      alert("ステータスを更新しました！");
+      toast.error("ステータスを更新しました！");
 
     } catch (error: any) {
-      alert("更新エラー: " + error.message);
+      toast.error("更新エラー: " + error.message);
     }
   };
 

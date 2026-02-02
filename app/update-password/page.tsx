@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function UpdatePasswordPage() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function UpdatePasswordPage() {
 
       if (error) throw error;
 
-      alert("パスワードを変更しました！");
+      toast.success("パスワードを変更しました！");
       router.push("/dashboard");
       router.refresh();
 

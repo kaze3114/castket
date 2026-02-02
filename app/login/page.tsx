@@ -103,7 +103,7 @@ export default function LoginPage() {
             {getTitle()}
           </h1>
           <p className="card-text">
-            {mode === "signup" && "Castketで新しいリレーションを始めましょう"}
+            {mode === "signup" && "Castketで新しい物語を始めましょう"}
             {mode === "login" && "おかえりなさい！"}
             {mode === "reset" && "登録したメールアドレスを入力してください"}
           </p>

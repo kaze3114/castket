@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "react-hot-toast";
+import NotificationListener from "@/components/NotificationListener";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,6 +29,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <NotificationListener />
+        <Toaster position="bottom-right" reverseOrder={false} />
         {children}
       </body>
     </html>

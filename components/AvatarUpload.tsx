@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import imageCompression from "browser-image-compression";
+import toast from "react-hot-toast";
 
 // ↓ userIdを受け取るように変更されているか確認！
 type Props = {
@@ -68,7 +69,7 @@ export default function AvatarUpload({ userId, url, onUpload }: Props) {
       onUpload(publicUrl);
 
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setUploading(false);
     }

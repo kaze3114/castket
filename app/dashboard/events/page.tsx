@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import EventBannerUpload from "@/components/EventBannerUpload";
 import { EVENT_TAGS } from "@/lib/constants";
 import { checkContentSafety, checkImageSafety } from "@/app/actions/moderate";
+import toast from "react-hot-toast";
 
 const WEEKDAYS = [
   { val: "Sun", label: "日" },
@@ -149,7 +150,9 @@ export default function MyEventsPage() {
       const textCheckResult = await checkContentSafety(contentToCheck, user.id);
 
       if (!textCheckResult.isSafe) {
-        alert(`【登録エラー】\n${textCheckResult.reason}`);
+        toast.error(`登録エラー: ${textCheckResult.reason}`, {
+          duration: 5000, // 5秒間表示
+        });
         setIsSubmitting(false);
         return; 
       }
@@ -159,7 +162,9 @@ export default function MyEventsPage() {
         // 今回はシンプルに毎回チェック、または以前のURLと同じならスキップなどの判定も可能です。
         const imageCheckResult = await checkImageSafety(bannerUrl, user.id);
         if (!imageCheckResult.isSafe) {
-          alert(`【登録エラー】\n${imageCheckResult.reason}`);
+toast.error(`登録エラー:${imageCheckResult.reason}`, {
+    duration: 5000, // 5秒間表示
+  });
           setIsSubmitting(false);
           return; 
         }
@@ -199,7 +204,7 @@ export default function MyEventsPage() {
           .eq("id", editingEventId);
 
         if (error) throw error;
-        alert("イベントを更新しました！");
+        toast.success("イベントを更新しました！");
       } else {
         // ★新規作成処理 (INSERT)
         const { error } = await supabase
@@ -207,7 +212,7 @@ export default function MyEventsPage() {
           .insert(eventData);
 
         if (error) throw error;
-        alert("イベントを作成しました！");
+        toast.success("イベントを作成しました！");
       }
 
       // リロードせずにデータを再取得してフォームをクリア
@@ -215,7 +220,7 @@ export default function MyEventsPage() {
       resetForm();
 
     } catch (error: any) {
-      alert("エラー: " + error.message);
+      toast.error("エラー: " + error.message);
     } finally {
       setIsSubmitting(false);
     }

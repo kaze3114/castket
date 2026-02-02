@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function FeedbackPage() {
   const router = useRouter();
@@ -60,7 +61,7 @@ const handleSubmit = async () => {
       setStep(3); // 完了画面へ（ユーザーには成功したように見える）
 
     } catch (error: any) {
-      alert("エラーが発生しました: " + error.message);
+      toast.error("エラーが発生しました: " + error.message);
       setIsSubmitting(false);
     }
   };

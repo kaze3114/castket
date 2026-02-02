@@ -8,6 +8,7 @@ import CastLikeButton from "@/components/CastLikeButton";
 import BookmarkButton from "@/components/BookmarkButton";
 import OfferModal from "@/components/OfferModal";
 import { ROLE_OPTIONS } from "@/lib/constants";
+import toast from "react-hot-toast";
 
 export default function CastDetailPage() {
   const params = useParams();
@@ -109,7 +110,7 @@ export default function CastDetailPage() {
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareUrl);
-    alert("プロフィールのURLをコピーしました！");
+    toast.success("プロフィールのURLをコピーしました！");
   };
 
   if (loading) return <div style={{ padding: "40px", textAlign: "center" }}>読み込み中...</div>;

@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { checkUserRestriction } from "@/app/actions/moderate";
 import { ROLE_OPTIONS } from "@/lib/constants";
+import toast from "react-hot-toast";
 
 const PLAY_STYLE_OPTIONS = [
   "デスクトップモード",
@@ -143,7 +144,7 @@ export default function EditProfilePage() {
 
     } catch (error) {
       console.error(error);
-      alert("画像の読み込みに失敗しました");
+      toast.error("画像の読み込みに失敗しました");
     } finally {
       setIsCompressing(false);
     }
@@ -153,7 +154,7 @@ export default function EditProfilePage() {
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     if (portfolioImages.length >= 4) {
-      alert("画像は最大4枚までです");
+      toast.error("画像は最大4枚までです");
       return;
     }
     
@@ -186,7 +187,7 @@ export default function EditProfilePage() {
   
     } catch (error: any) {
       console.error(error);
-      alert("アップロード失敗: " + error.message);
+      toast.error("アップロード失敗: " + error.message);
     } finally {
       setIsGalleryUploading(false);
     }
@@ -212,7 +213,7 @@ export default function EditProfilePage() {
       setPortfolioImages(portfolioImages.filter(img => img.id !== imageId));
   
     } catch (error: any) {
-      alert("削除失敗: " + error.message);
+      toast.error("削除失敗: " + error.message);
     }
   };
 
@@ -257,12 +258,12 @@ export default function EditProfilePage() {
 
       if (error) throw error;
       
-      alert("プロフィールを更新しました！");
+      toast.success("プロフィールを更新しました！");
       router.push("/dashboard");
 
     } catch (error: any) {
       console.error(error);
-      alert("エラー: " + error.message);
+      toast.error("エラー: " + error.message);
     } finally {
       setIsSubmitting(false);
     }

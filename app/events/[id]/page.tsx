@@ -8,6 +8,7 @@ import { WEEKDAY_MAP } from "@/lib/constants";
 import { checkUserRestriction } from "@/app/actions/moderate";
 import LikeButton from "@/components/LikeButton";
 import BookmarkButton from "@/components/BookmarkButton";
+import toast from "react-hot-toast";
 
 export default function EventDetailPage() {
   const params = useParams();
@@ -123,7 +124,7 @@ export default function EventDetailPage() {
 
     const restriction = await checkUserRestriction(currentUser.id);
     if (!restriction.allowed) {
-      alert(`【操作制限】\n${restriction.reason}`);
+      toast.error(`【操作制限】\n${restriction.reason}`);
       return;
     }
 
@@ -144,11 +145,11 @@ export default function EventDetailPage() {
         });
 
       if (error) throw error;
-      alert("応募しました！");
+      toast.success("応募しました！");
       setHasApplied(true);
       setEntryStatus("Pending");
     } catch (error: any) {
-      alert("エラー: " + error.message);
+      toast.error("エラー: " + error.message);
     } finally {
       setApplying(false);
     }
@@ -157,7 +158,7 @@ export default function EventDetailPage() {
   // ★追加: シェアボタンの処理
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareUrl);
-    alert("リンクをコピーしました！");
+    toast.success("リンクをコピーしました！");
   };
 
   const formatTime = (time: string) => (time ? time.slice(0, 5) : "");

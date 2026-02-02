@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import toast from "react-hot-toast";
 
 type OfferReplyModalProps = {
   isOpen: boolean;
@@ -31,11 +32,11 @@ export default function OfferReplyModal({ isOpen, onClose, offer, onUpdate }: Of
 
       // (将来的にはここで entries テーブルにも追加すると完璧ですが、まずはオファー状況の更新だけでOK)
 
-      alert(status === "accepted" ? "オファーを承諾しました！🎉" : "オファーを辞退しました。");
+      toast.success(status === "accepted" ? "オファーを承諾しました！🎉" : "オファーを辞退しました。");
       onUpdate(); // ダッシュボードを更新
       onClose();  // 閉じる
     } catch (err: any) {
-      alert("エラー: " + err.message);
+      toast.error("エラー: " + err.message);
     } finally {
       setLoading(false);
     }

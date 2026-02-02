@@ -30,6 +30,8 @@ export default function Dashboard() {
 
   const [activeTab, setActiveTab] = useState<"manage" | "bookmarks">("manage");
 
+  const pendingOffers = receivedOffers.filter(o => o.status === 'pending');
+  const historyOffers = receivedOffers.filter(o => o.status !== 'pending');
   const getRoleLabel = (value: string | null) => {
     if (!value) return "未設定";
     const found = ROLE_OPTIONS.find((opt) => opt.value === value);
@@ -239,13 +241,14 @@ export default function Dashboard() {
           {activeTab === "manage" && (
             <div style={{ display: "grid", gap: "40px" }}>
 
-              {/* ▼▼▼ 届いているオファー（クリック可能に修正） ▼▼▼ */}
-              {receivedOffers.length > 0 && (
-                <section>
-                  <h3 className="section-lead" style={{ textAlign: "left", marginBottom: "16px", color: "var(--accent)" }}>📩 あなたに届いたオファー</h3>
-                  <div style={{ display: "grid", gap: "16px" }}>
-                    {receivedOffers.map((offer) => (
-                      // onClickでモーダルを開く
+{/* ▼▼▼ 届いているオファー（修正版） ▼▼▼ */}
+              <section>
+                <h3 className="section-lead" style={{ textAlign: "left", marginBottom: "16px", color: "var(--accent)" }}>📩 あなたに届いたオファー</h3>
+                
+                {/* 1. 未対応のオファー (pendingOffers) だけを表示 */}
+                {pendingOffers.length > 0 ? (
+                  <div style={{ display: "grid", gap: "16px", marginBottom: "24px" }}>
+                    {pendingOffers.map((offer) => (
                       <div 
                         key={offer.id} 
                         className="card hover-card" 
@@ -266,15 +269,41 @@ export default function Dashboard() {
                            </div>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
-                          <StatusBadge status={offer.status} />
+                          <span style={{ background: "#fbbf24", color: "#fff", padding: "4px 12px", borderRadius: "99px", fontSize: "0.8rem", fontWeight: "bold" }}>返信待ち</span>
                           <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{new Date(offer.created_at).toLocaleDateString()}</span>
                         </div>
                       </div>
                     ))}
                   </div>
-                </section>
-              )}
+                ) : (
+                   /* 未対応がないときは静かに */
+                   <div className="card" style={{ color: "var(--muted)", marginBottom: "24px", padding: "20px", textAlign: "center" }}>
+                     現在、未対応のオファーはありません。
+                   </div>
+                )}
 
+                {/* 2. 過去の履歴 (historyOffers) は折りたたんで表示 */}
+                {historyOffers.length > 0 && (
+                  <details style={{ marginTop: "16px" }}>
+                    <summary style={{ cursor: "pointer", color: "var(--muted)", fontSize: "0.9rem", userSelect: "none" }}>
+                      ▼ 過去のオファー履歴を表示 ({historyOffers.length}件)
+                    </summary>
+                    <div style={{ display: "grid", gap: "12px", marginTop: "12px", opacity: 0.8 }}>
+                      {historyOffers.map((offer) => (
+                        <div key={offer.id} className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "#f9f9f9" }}>
+                          <div style={{ fontSize: "0.9rem" }}>
+                            <span style={{ fontWeight: "bold" }}>{offer.event?.title}</span>
+                            <span style={{ margin: "0 8px", color: "#ccc" }}>|</span>
+                            <span style={{ color: "#666" }}>{offer.sender?.display_name}</span>
+                          </div>
+                          <StatusBadge status={offer.status} />
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
+              </section>
+              
               {/* 送ったオファー */}
               {sentOffers.length > 0 && (
                 <section>

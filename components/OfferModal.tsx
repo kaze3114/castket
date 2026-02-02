@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import toast from "react-hot-toast";
 
 type OfferModalProps = {
   isOpen: boolean;
@@ -20,10 +21,25 @@ export default function OfferModal({ isOpen, onClose, castId, castName, myEvents
   if (!isOpen) return null;
 
   const handleSendOffer = async () => {
-    if (!selectedEventId) return alert("イベントを選択してください");
+    if (!selectedEventId) return toast.error("イベントを選択してください");
     
     setLoading(true);
     try {
+
+const { data: existingOffers } = await supabase
+        .from("offers")
+        .select("id")
+        .eq("event_id", selectedEventId)
+        .eq("receiver_id", castId)
+        .eq("status", "pending")
+        .limit(1); // 1件でもあればOK
+
+      // 配列の中身があるかチェック
+      if (existingOffers && existingOffers.length > 0) {
+        toast.error("このイベントのオファーは既に送信済みです！\n返信をお待ちください。");
+        setLoading(false);
+        return;
+      }
       const { error } = await supabase.from("offers").insert({
         event_id: selectedEventId,
         sender_id: currentUserId,
@@ -34,11 +50,11 @@ export default function OfferModal({ isOpen, onClose, castId, castName, myEvents
 
       if (error) throw error;
 
-      alert("オファーを送信しました！");
+      toast.success("オファーを送信しました！");
       onClose(); // 閉じる
       setMessage(""); // リセット
     } catch (err: any) {
-      alert("エラー: " + err.message);
+      toast.error("エラー: " + err.message);
     } finally {
       setLoading(false);
     }

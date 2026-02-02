@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import toast from "react-hot-toast";
 
 // ▼ よくある質問のデータ
 const FAQ_DATA = [
@@ -90,10 +91,10 @@ export default function HelpPage() {
 
       if (!res.ok) throw new Error("送信に失敗しました");
 
-      alert("お問い合わせありがとうございます！\n内容を確認次第、ご連絡いたします。");
+      toast.success("お問い合わせありがとうございます！\n内容を確認次第、ご連絡いたします。");
       setContactBody("");
     } catch (error) {
-      alert("送信中にエラーが発生しました。");
+      toast.error("送信中にエラーが発生しました。");
     } finally {
       setIsSending(false);
     }
