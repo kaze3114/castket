@@ -6,11 +6,77 @@ import Link from "next/link";
 import dayjs from "dayjs";
 import "dayjs/locale/ja";
 // ▼ 定数をインポート
-import { EVENT_TAGS } from "@/lib/constants";
+import { EVENT_TAGS, WEEKDAY_MAP } from "@/lib/constants";
 
 dayjs.locale("ja");
 
 export default function EventListPage() {
+  // ▼▼▼ 追加: 日付・時間の表示を整える関数 ▼▼▼
+// ▼▼▼ 修正: 日付と時間を分かりやすくデザインして表示する関数 ▼▼▼
+  const renderEventSchedule = (event: any) => {
+    // 秒を削る
+    const start = event.start_time ? event.start_time.slice(0, 5) : "";
+    const end = event.end_time ? event.end_time.slice(0, 5) : "";
+    const timeStr = start || end ? `${start} ~ ${end}` : "";
+
+    let dateContent;
+
+    // スケジュールタイプごとの日付表示
+    if (event.schedule_type === "one_time") {
+      dateContent = (
+        <>
+          <span style={{ marginRight: "4px" }}>📅</span>
+          {event.event_date}
+        </>
+      );
+    } else if (event.schedule_type === "weekly") {
+      const days = event.weekdays && Array.isArray(event.weekdays)
+        ? event.weekdays.map((d: string) => WEEKDAY_MAP[d] || d).join("・")
+        : "曜日未定";
+      dateContent = (
+        <>
+          <span style={{ marginRight: "4px" }}>🔄</span>
+          毎週 <span>{days}曜</span>
+        </>
+      );
+    } else {
+      dateContent = <span>❓ 不定期</span>;
+    }
+
+    return (
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" }}>
+        {/* 日付エリア: 強調カラー */}
+        <div style={{ 
+          color: "var(--accent)", 
+          fontWeight: "bold", 
+          fontSize: "0.9rem",
+          display: "flex", 
+          alignItems: "center"
+        }}>
+          {dateContent}
+        </div>
+        
+        {/* 時間エリア: グレー背景で区別 */}
+        {timeStr && (
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "4px", 
+            fontSize: "0.8rem", 
+            color: "#555", 
+            background: "#f3f4f6", // 薄いグレーの背景
+            padding: "2px 8px", 
+            borderRadius: "4px",
+            border: "1px solid #eee"
+          }}>
+            <span>⏰</span>
+            <span style={{ fontFamily: "monospace", fontWeight: "bold" }}>{timeStr}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -225,13 +291,12 @@ export default function EventListPage() {
                   </div>
                   <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column", width: "100%" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                      <div style={{ fontSize: "0.85rem", color: "var(--accent)", fontWeight: "bold" }}>
-                        {event.schedule_type === "one_time" 
-                          ? `${event.event_date}　${event.start_time} ~ ${event.end_time}`
-                          : `${event.weekly_day}　${event.start_time} ~ ${event.end_time}`
-                        }
-                      </div>
-                      <div style={{ fontSize: "0.8rem", color: "#ff4757", fontWeight: "bold", display: "flex", alignItems: "center", gap: "4px" }}>
+
+                  <div style={{ marginBottom: "8px" }}>
+                    {renderEventSchedule(event)}
+                  </div>
+
+                  <div style={{ fontSize: "0.8rem", color: "#ff4757", fontWeight: "bold", display: "flex", alignItems: "center", gap: "4px" }}>
                         <span>♥</span> {event.likesCount}
                       </div>
                     </div>

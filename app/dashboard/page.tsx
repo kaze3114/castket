@@ -5,10 +5,11 @@ import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ROLE_OPTIONS } from "@/lib/constants"; 
-// ▼▼▼ 新しいモーダルをインポート ▼▼▼
 import OfferReplyModal from "@/components/OfferReplyModal";
+import BookmarkModal from "@/components/BookmarkModal";
 
 export default function Dashboard() {
+  const [editBookmarkTarget, setEditBookmarkTarget] = useState<any>(null); // 編集用
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -72,9 +73,13 @@ export default function Dashboard() {
     const { data: bmEvents } = await supabase.from("event_bookmarks").select("created_at, event:events(*)").eq("user_id", user.id).order("created_at", { ascending: false });
     if (bmEvents) setBookmarkedEvents(bmEvents.map((item: any) => item.event).filter((e: any) => e !== null));
 
-    const { data: bmCasts } = await supabase.from("cast_bookmarks").select("created_at, cast:profiles!target_cast_id(*)").eq("user_id", user.id).order("created_at", { ascending: false });
-    if (bmCasts) setBookmarkedCasts(bmCasts.map((item: any) => item.cast).filter((c: any) => c !== null));
-
+const { data: bmCasts } = await supabase
+      .from("cast_bookmarks")
+      .select("id, memo, created_at, cast:profiles!target_cast_id(*)") // memoを追加
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    
+    if (bmCasts) setBookmarkedCasts(bmCasts); // mapせずそのままセット
     const { count: castLikeCount } = await supabase.from("profile_likes").select("id", { count: 'exact', head: true }).eq("target_cast_id", user.id);
     setReceivedCastLikes(castLikeCount || 0);
 
@@ -241,69 +246,7 @@ export default function Dashboard() {
           {activeTab === "manage" && (
             <div style={{ display: "grid", gap: "40px" }}>
 
-{/* ▼▼▼ 届いているオファー（修正版） ▼▼▼ */}
-              <section>
-                <h3 className="section-lead" style={{ textAlign: "left", marginBottom: "16px", color: "var(--accent)" }}>📩 あなたに届いたオファー</h3>
-                
-                {/* 1. 未対応のオファー (pendingOffers) だけを表示 */}
-                {pendingOffers.length > 0 ? (
-                  <div style={{ display: "grid", gap: "16px", marginBottom: "24px" }}>
-                    {pendingOffers.map((offer) => (
-                      <div 
-                        key={offer.id} 
-                        className="card hover-card" 
-                        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderLeft: "4px solid var(--accent)", cursor: "pointer" }}
-                        onClick={() => handleOfferClick(offer)}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                           <div style={{width: "40px", height: "40px", borderRadius: "50%", background: "#eee", overflow: "hidden"}}>
-                              {offer.sender?.avatar_url && <img src={offer.sender.avatar_url} style={{width:"100%", height:"100%", objectFit:"cover"}} />}
-                           </div>
-                           <div>
-                              <div style={{ fontWeight: "bold", fontSize: "1.05rem" }}>
-                                {offer.event?.title || "イベント情報なし"}
-                              </div>
-                              <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>
-                                依頼主: {offer.sender?.display_name} さん
-                              </div>
-                           </div>
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
-                          <span style={{ background: "#fbbf24", color: "#fff", padding: "4px 12px", borderRadius: "99px", fontSize: "0.8rem", fontWeight: "bold" }}>返信待ち</span>
-                          <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{new Date(offer.created_at).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                   /* 未対応がないときは静かに */
-                   <div className="card" style={{ color: "var(--muted)", marginBottom: "24px", padding: "20px", textAlign: "center" }}>
-                     現在、未対応のオファーはありません。
-                   </div>
-                )}
 
-                {/* 2. 過去の履歴 (historyOffers) は折りたたんで表示 */}
-                {historyOffers.length > 0 && (
-                  <details style={{ marginTop: "16px" }}>
-                    <summary style={{ cursor: "pointer", color: "var(--muted)", fontSize: "0.9rem", userSelect: "none" }}>
-                      ▼ 過去のオファー履歴を表示 ({historyOffers.length}件)
-                    </summary>
-                    <div style={{ display: "grid", gap: "12px", marginTop: "12px", opacity: 0.8 }}>
-                      {historyOffers.map((offer) => (
-                        <div key={offer.id} className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "#f9f9f9" }}>
-                          <div style={{ fontSize: "0.9rem" }}>
-                            <span style={{ fontWeight: "bold" }}>{offer.event?.title}</span>
-                            <span style={{ margin: "0 8px", color: "#ccc" }}>|</span>
-                            <span style={{ color: "#666" }}>{offer.sender?.display_name}</span>
-                          </div>
-                          <StatusBadge status={offer.status} />
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-                )}
-              </section>
-              
               {/* 送ったオファー */}
               {sentOffers.length > 0 && (
                 <section>
@@ -381,42 +324,80 @@ export default function Dashboard() {
             </div>
           )}
 
-          {activeTab === "bookmarks" && (
-            // (ブックマークタブはそのまま)
+{activeTab === "bookmarks" && (
             <div style={{ display: "grid", gap: "40px" }}>
+               {/* 1. 保存したイベント */}
                <section>
                   <h3 className="section-lead" style={{ textAlign: "left", marginBottom: "16px" }}>🔖 保存したイベント</h3>
-                  {bookmarkedEvents.length === 0 ? <div className="card" style={{ color: "var(--muted)" }}>まだブックマークしたイベントはありません。</div> : (
+                  {bookmarkedEvents.length === 0 ? (
+                     <div className="card" style={{ color: "var(--muted)" }}>まだブックマークしたイベントはありません。</div> 
+                  ) : (
                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
                         {bookmarkedEvents.map((event) => (
                         <Link href={`/events/${event.id}`} key={event.id} style={{ textDecoration: "none", color: "inherit" }}>
-                              <article className="card hover-up" style={{ padding: "0", overflow: "hidden" }}>
-                                 <div style={{ width: "100%", aspectRatio: "16/9", background: "#eee" }}>{event.banner_url ? <img src={event.banner_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : null}</div>
-                                 <div style={{ padding: "12px" }}><div style={{ fontWeight: "bold", marginBottom: "4px" }}>{event.title}</div></div>
-                              </article>
+                           <article className="card hover-up" style={{ padding: "0", overflow: "hidden" }}>
+                                 <div style={{ width: "100%", aspectRatio: "16/9", background: "#eee" }}>
+                                   {event.banner_url ? <img src={event.banner_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : null}
+                                 </div>
+                                 <div style={{ padding: "12px" }}>
+                                   <div style={{ fontWeight: "bold", marginBottom: "4px" }}>{event.title}</div>
+                                 </div>
+                           </article>
                         </Link>
                         ))}
                      </div>
                   )}
                </section>
+
+               {/* 2. 保存したキャスト (メモ機能付き) */}
                <section>
                   <h3 className="section-lead" style={{ textAlign: "left", marginBottom: "16px" }}>🔖 保存したキャスト</h3>
-                  {bookmarkedCasts.length === 0 ? <div className="card" style={{ color: "var(--muted)" }}>まだブックマークしたキャストはいません。</div> : (
-                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "16px" }}>
-                        {bookmarkedCasts.map((cast) => (
-                        <Link href={`/casts/${cast.user_id}`} key={cast.user_id} style={{ textDecoration: "none", color: "inherit" }}>
-                           <div className="card hover-up" style={{ padding: "16px", display: "flex", alignItems: "center", gap: "12px" }}>
-                              <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#eee", overflow: "hidden" }}>{cast.avatar_url && <img src={cast.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}</div>
-                              <div style={{ fontWeight: "bold", fontSize: "0.9rem" }}>{cast.display_name}</div>
-                           </div>
-                        </Link>
-                        ))}
+                  {bookmarkedCasts.length === 0 ? (
+                     <div className="card" style={{ color: "var(--muted)" }}>まだブックマークしたキャストはいません。</div> 
+                  ) : (
+                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
+                        {bookmarkedCasts.map((item) => {
+                          // item は cast_bookmarks テーブルの行データ
+                          const cast = item.cast; 
+                          if(!cast) return null;
+                          
+                          return (
+                            <div key={item.id} className="card hover-up" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                               {/* キャスト情報部分 */}
+                               <Link href={`/casts/${cast.user_id}`} style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: "12px" }}>
+                                  <div style={{ width: "50px", height: "50px", borderRadius: "50%", background: "#eee", overflow: "hidden", flexShrink: 0 }}>
+                                    {cast.avatar_url && <img src={cast.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                                  </div>
+                                  <div>
+                                     <div style={{ fontWeight: "bold", fontSize: "1rem" }}>{cast.display_name}</div>
+                                     <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>{getRoleLabel(cast.role)}</div>
+                                  </div>
+                               </Link>
+
+                               {/* メモ表示エリア */}
+                               <div style={{ background: "#f9f9f9", padding: "10px", borderRadius: "8px", fontSize: "0.85rem", color: "#555", position: "relative" }}>
+                                 {item.memo ? (
+                                   <div style={{ whiteSpace: "pre-wrap" }}>📝 {item.memo}</div>
+                                 ) : (
+                                   <div style={{ color: "#aaa", fontStyle: "italic" }}>メモなし</div>
+                                 )}
+                                 
+                                 {/* 編集ボタン */}
+                                 <button 
+                                   onClick={() => setEditBookmarkTarget({ id: cast.user_id, name: cast.display_name })}
+                                   style={{ position: "absolute", top: "8px", right: "8px", background: "none", border: "none", cursor: "pointer", color: "var(--accent)", fontSize: "0.8rem", fontWeight: "bold" }}
+                                 >
+                                   編集
+                                 </button>
+                               </div>
+                            </div>
+                          );
+                        })}
                      </div>
                   )}
                </section>
             </div>
-          )}
-        </div>
+          )}        </div>
       </main>
       
       {/* ▼▼▼ モーダルを表示 ▼▼▼ */}
@@ -426,6 +407,18 @@ export default function Dashboard() {
         offer={selectedOffer}
         onUpdate={fetchData} // 返信後にデータを再取得
       />
+
+{/* ▼▼▼ ブックマーク編集モーダル ▼▼▼ */}
+      {editBookmarkTarget && user && (
+        <BookmarkModal
+          isOpen={true}
+          onClose={() => setEditBookmarkTarget(null)}
+          targetId={editBookmarkTarget.id}
+          targetName={editBookmarkTarget.name}
+          userId={user.id}
+          onUpdate={fetchData} // 編集・削除したらリストを更新
+        />
+      )}
 
       <style jsx>{`
         .main-badge { background: rgba(124, 58, 237, 0.1); color: var(--accent); padding: 6px 16px; borderRadius: 99px; font-size: 0.9rem; font-weight: bold; border: 1px solid rgba(124, 58, 237, 0.2); }

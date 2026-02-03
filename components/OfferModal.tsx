@@ -40,6 +40,37 @@ const { data: existingOffers } = await supabase
         setLoading(false);
         return;
       }
+
+      // ▼▼▼ 追加: クールタイムチェック (断られた場合の再送制限) ▼▼▼
+      const COOLDOWN_DAYS = 3; // ★ここで日数を設定 (例: 7日間)
+
+      const { data: rejectedOffer } = await supabase
+        .from("offers")
+        .select("created_at")
+        .eq("event_id", selectedEventId)
+        .eq("receiver_id", castId)
+        .eq("status", "rejected") // 「見送り」されたものを探す
+        .order("created_at", { ascending: false }) // 最新のものを1つ
+        .limit(1)
+        .single();
+
+      if (rejectedOffer) {
+        const lastDate = new Date(rejectedOffer.created_at).getTime();
+        const now = new Date().getTime();
+        const diffDays = (now - lastDate) / (1000 * 60 * 60 * 24);
+
+        if (diffDays < COOLDOWN_DAYS) {
+          const waitDays = Math.ceil(COOLDOWN_DAYS - diffDays);
+          toast.error(
+            `以前このイベントへのオファーは見送られています。\n再送するには、あと ${waitDays} 日お待ちください。`,
+            { duration: 5000 }
+          );
+          setLoading(false);
+          return;
+        }
+      }
+      // ▲▲▲ 追加ここまで ▲▲▲
+      
       const { error } = await supabase.from("offers").insert({
         event_id: selectedEventId,
         sender_id: currentUserId,

@@ -2454,11 +2454,77 @@ import Link from "next/link";
 import dayjs from "dayjs";
 import "dayjs/locale/ja";
 // ▼ 定数をインポート
-import { EVENT_TAGS } from "@/lib/constants";
+import { EVENT_TAGS, WEEKDAY_MAP } from "@/lib/constants";
 
 dayjs.locale("ja");
 
 export default function EventListPage() {
+  // ▼▼▼ 追加: 日付・時間の表示を整える関数 ▼▼▼
+// ▼▼▼ 修正: 日付と時間を分かりやすくデザインして表示する関数 ▼▼▼
+  const renderEventSchedule = (event: any) => {
+    // 秒を削る
+    const start = event.start_time ? event.start_time.slice(0, 5) : "";
+    const end = event.end_time ? event.end_time.slice(0, 5) : "";
+    const timeStr = start || end ? `${start} ~ ${end}` : "";
+
+    let dateContent;
+
+    // スケジュールタイプごとの日付表示
+    if (event.schedule_type === "one_time") {
+      dateContent = (
+        <>
+          <span style={{ marginRight: "4px" }}>📅</span>
+          {event.event_date}
+        </>
+      );
+    } else if (event.schedule_type === "weekly") {
+      const days = event.weekdays && Array.isArray(event.weekdays)
+        ? event.weekdays.map((d: string) => WEEKDAY_MAP[d] || d).join("・")
+        : "曜日未定";
+      dateContent = (
+        <>
+          <span style={{ marginRight: "4px" }}>🔄</span>
+          毎週 <span>{days}曜</span>
+        </>
+      );
+    } else {
+      dateContent = <span>❓ 不定期</span>;
+    }
+
+    return (
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" }}>
+        {/* 日付エリア: 強調カラー */}
+        <div style={{ 
+          color: "var(--accent)", 
+          fontWeight: "bold", 
+          fontSize: "0.9rem",
+          display: "flex", 
+          alignItems: "center"
+        }}>
+          {dateContent}
+        </div>
+        
+        {/* 時間エリア: グレー背景で区別 */}
+        {timeStr && (
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "4px", 
+            fontSize: "0.8rem", 
+            color: "#555", 
+            background: "#f3f4f6", // 薄いグレーの背景
+            padding: "2px 8px", 
+            borderRadius: "4px",
+            border: "1px solid #eee"
+          }}>
+            <span>⏰</span>
+            <span style={{ fontFamily: "monospace", fontWeight: "bold" }}>{timeStr}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -2673,13 +2739,12 @@ export default function EventListPage() {
                   </div>
                   <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column", width: "100%" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                      <div style={{ fontSize: "0.85rem", color: "var(--accent)", fontWeight: "bold" }}>
-                        {event.schedule_type === "one_time" 
-                          ? `${event.event_date}　${event.start_time} ~ ${event.end_time}`
-                          : `${event.weekly_day}　${event.start_time} ~ ${event.end_time}`
-                        }
-                      </div>
-                      <div style={{ fontSize: "0.8rem", color: "#ff4757", fontWeight: "bold", display: "flex", alignItems: "center", gap: "4px" }}>
+
+                  <div style={{ marginBottom: "8px" }}>
+                    {renderEventSchedule(event)}
+                  </div>
+
+                  <div style={{ fontSize: "0.8rem", color: "#ff4757", fontWeight: "bold", display: "flex", alignItems: "center", gap: "4px" }}>
                         <span>♥</span> {event.likesCount}
                       </div>
                     </div>
@@ -5167,7 +5232,7 @@ export default function BookmarkButton({ targetId, targetType, userId }: Props) 
         .select("id")
         .eq("user_id", userId)
         .eq(idColumn, targetId)
-        .single();
+        .maybeSingle();
       
       if (data) setIsBookmarked(true);
     };
@@ -5594,7 +5659,7 @@ export default function NotificationListener() {
     if (data.offerCount > prevCountRef.current) {
       
       toast((t) => (
-        <div onClick={() => { router.push("/dashboard/offers"); toast.dismiss(t.id); }} style={{ cursor: "pointer" }}>
+        <div onClick={() => { router.push("/dashboard"); toast.dismiss(t.id); }} style={{ cursor: "pointer" }}>
           📩 <b>新着オファーが届きました！</b>
           <div style={{ fontSize: "0.80rem" }}>総数: {data.offerCount}件</div>
         </div>
@@ -5656,6 +5721,37 @@ const { data: existingOffers } = await supabase
         setLoading(false);
         return;
       }
+
+      // ▼▼▼ 追加: クールタイムチェック (断られた場合の再送制限) ▼▼▼
+      const COOLDOWN_DAYS = 3; // ★ここで日数を設定 (例: 7日間)
+
+      const { data: rejectedOffer } = await supabase
+        .from("offers")
+        .select("created_at")
+        .eq("event_id", selectedEventId)
+        .eq("receiver_id", castId)
+        .eq("status", "rejected") // 「見送り」されたものを探す
+        .order("created_at", { ascending: false }) // 最新のものを1つ
+        .limit(1)
+        .single();
+
+      if (rejectedOffer) {
+        const lastDate = new Date(rejectedOffer.created_at).getTime();
+        const now = new Date().getTime();
+        const diffDays = (now - lastDate) / (1000 * 60 * 60 * 24);
+
+        if (diffDays < COOLDOWN_DAYS) {
+          const waitDays = Math.ceil(COOLDOWN_DAYS - diffDays);
+          toast.error(
+            `以前このイベントへのオファーは見送られています。\n再送するには、あと ${waitDays} 日お待ちください。`,
+            { duration: 5000 }
+          );
+          setLoading(false);
+          return;
+        }
+      }
+      // ▲▲▲ 追加ここまで ▲▲▲
+      
       const { error } = await supabase.from("offers").insert({
         event_id: selectedEventId,
         sender_id: currentUserId,

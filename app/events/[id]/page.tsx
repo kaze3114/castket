@@ -51,7 +51,7 @@ export default function EventDetailPage() {
         .from("events")
         .select("*")
         .eq("id", params.id)
-        .single();
+        .maybeSingle();
 
       if (error || !eventData) {
         setLoading(false);
@@ -64,7 +64,7 @@ export default function EventDetailPage() {
         .from("profiles")
         .select("*")
         .eq("user_id", eventData.organizer_id)
-        .single();
+        .maybeSingle();
       if (profileData) setOrganizer(profileData);
 
       // 3. 採用人数カウント
@@ -85,7 +85,7 @@ export default function EventDetailPage() {
           .select("*")
           .eq("event_id", params.id)
           .eq("cast_id", user.id)
-          .single();
+          .maybeSingle();
         if (entryData) {
           setHasApplied(true);
           setEntryStatus(entryData.status);
@@ -105,7 +105,7 @@ export default function EventDetailPage() {
           .select("id")
           .eq("event_id", params.id)
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
         if (myLike) setIsLiked(true);
       }
 
