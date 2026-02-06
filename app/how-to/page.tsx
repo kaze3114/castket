@@ -57,16 +57,6 @@ export default function HowToPage() {
 
   return (
     <>
-      <header className="site-header">
-        <div className="container header-inner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Link href="/" className="logo-wrap" style={{ textDecoration: 'none' }}>
-            <div className="logo-mark">C</div>
-            <div className="logo-text-block"><div className="logo-text-main">Castket</div><div className="logo-text-sub">How to Use</div></div>
-          </Link>
-          <div className="pc-menu" style={{ display: "flex", alignItems: "center" }}><MenuContent /></div>
-          <button className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(true)}><span style={{ fontSize: "1.5rem" }}>≡</span></button>
-        </div>
-      </header>
 
       {isMobileMenuOpen && (
         <div className="mobile-menu-overlay">

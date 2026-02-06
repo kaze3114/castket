@@ -188,6 +188,65 @@ export default function CastDetailPage() {
               )}
             </div>
 
+{/* ▼▼▼ 追加: SNSリンク表示エリア ▼▼▼ */}
+              {(profile.twitter_id || profile.vrchat_id) && (
+                <div style={{ display: "flex", gap: "24px", marginTop: "32px",marginBottom: "12px",justifyContent: "center",flexWrap: "wrap" }}>
+                  
+                  {/* X (Twitter) ボタン */}
+                  {profile.twitter_id && (
+                    <a 
+                      href={`https://x.com/${profile.twitter_id}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="btn"
+                      style={{ 
+                        background: "#000", 
+                        color: "#fff", 
+                        padding: "8px 16px", 
+                        fontSize: "0.9rem",
+                        display: "flex", 
+                        alignItems: "center", 
+                        gap: "8px",
+                        textDecoration: "none"
+                      }}
+                    >
+                      {/* XのロゴSVG */}
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                      </svg>
+                      @{profile.twitter_id}
+                    </a>
+                  )}
+
+                  {/* VRChat ボタン */}
+                  {profile.vrchat_id && (
+                    <a 
+                      href={`https://vrchat.com/home/user/${profile.vrchat_id}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="btn"
+                      style={{ 
+                        background: "#06b6d4", // VRChatっぽい色
+                        color: "#fff", 
+                        padding: "8px 16px", 
+                        fontSize: "0.9rem",
+                        display: "flex", 
+                        alignItems: "center", 
+                        gap: "8px",
+                        textDecoration: "none"
+                      }}
+                    >
+                      {/* VRChatっぽいアイコン（Userアイコン） */}
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
+                      VRChat Profile
+                    </a>
+                  )}
+                </div>
+              )}
+
             {/* アクションボタン */}
             <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "16px", marginBottom: "32px", flexWrap: "wrap" }}>
               {currentUser && currentUser.id !== profile.user_id && (

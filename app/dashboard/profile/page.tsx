@@ -32,6 +32,10 @@ export default function EditProfilePage() {
   const [playStyle, setPlayStyle] = useState("");
   const [bio, setBio] = useState("");
   
+  // ▼▼▼ 追加: SNSリンク用ステート ▼▼▼
+  const [twitterId, setTwitterId] = useState("");
+  const [vrchatId, setVrchatId] = useState("");
+
   // アバター関連
   const [previewUrl, setPreviewUrl] = useState(""); // 表示用URL
   const [avatarFile, setAvatarFile] = useState<File | null>(null); // アップロード待ちファイル
@@ -64,6 +68,10 @@ export default function EditProfilePage() {
         setSubRole2(profile.sub_role_2 || "");
         setPlayStyle(profile.play_style || "");
         setBio(profile.bio || "");
+
+        // ▼▼▼ 追加: DBから読み込んでセット ▼▼▼
+        setTwitterId(profile.twitter_id || "");
+        setVrchatId(profile.vrchat_id || "");
         
         const currentUrl = profile.avatar_url || "";
         setPreviewUrl(currentUrl);
@@ -249,6 +257,10 @@ export default function EditProfilePage() {
         play_style: playStyle,
         bio: bio,
         avatar_url: finalAvatarUrl,
+        // ▼▼▼ 追加: 保存データに含める ▼▼▼
+        twitter_id: twitterId,
+        vrchat_id: vrchatId,
+
         updated_at: new Date().toISOString(),
       };
 
@@ -331,6 +343,46 @@ export default function EditProfilePage() {
             <label className="label-title">自己紹介・アピール</label>
             <textarea className="input-field" rows={6} value={bio} onChange={(e) => setBio(e.target.value)} placeholder="活動可能時間や、得意なこと、過去の実績などを書いてみましょう！"/>
           </div>
+
+<div style={{ marginTop: "20px", borderTop: "1px solid #eee", paddingTop: "24px" }}>
+            <h3 style={{ fontSize: "1.1rem", marginBottom: "16px" }}>🔗 ソーシャル・連絡先</h3>
+            
+            <div style={{ display: "grid", gap: "16px" }}>
+              {/* X (Twitter) */}
+              <div>
+                <label className="label-title">X (Twitter) ユーザーID</label>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ color: "var(--muted)", fontWeight: "bold" }}>@</span>
+                  <input 
+                    className="input-field" 
+                    type="text" 
+                    value={twitterId} 
+                    onChange={(e) => setTwitterId(e.target.value)} 
+                    placeholder="例: castket_official"
+                  />
+                </div>
+                <p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "4px" }}>
+                  ※連絡手段として表示されます
+                </p>
+              </div>
+
+              {/* VRChat */}
+              <div>
+                <label className="label-title">VRChat ユーザーID (表示名ではありません)</label>
+                <input 
+                  className="input-field" 
+                  type="text" 
+                  value={vrchatId} 
+                  onChange={(e) => setVrchatId(e.target.value)} 
+                  placeholder="例: usr_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                />
+                <p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "4px" }}>
+                  ※VRChat公式サイトのプロフィールURL末尾のIDを入力推奨
+                </p>
+              </div>
+            </div>
+          </div>
+
 
           {/* ギャラリーエリア */}
           <div style={{ marginTop: "20px", borderTop: "1px solid #eee", paddingTop: "24px" }}>

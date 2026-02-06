@@ -127,22 +127,6 @@ const { data: bmCasts } = await supabase
 
   return (
     <>
-      <header className="site-header">
-         {/* (ヘッダーは変更なし) */}
-        <div className="container header-inner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Link href="/dashboard" className="logo-wrap" style={{ textDecoration: 'none' }}>
-            <div className="logo-mark">C</div>
-            <div className="logo-text-block">
-              <div className="logo-text-main">Castket</div>
-              <div className="logo-text-sub">Dashboard</div>
-            </div>
-          </Link>
-          <button onClick={handleLogout} className="btn btn-ghost" style={{ fontSize: "0.9rem" }}>
-            🚪 ログアウト
-          </button>
-        </div>
-      </header>
-
       <main className="section section-soft" style={{ minHeight: "100vh" }}>
         <div className="container">
           

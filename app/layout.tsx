@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import NotificationListener from "@/components/NotificationListener";
+import Header from "@/components/Header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,13 +27,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <NotificationListener />
-        <Toaster position="bottom-right" reverseOrder={false} />
-        {children}
+<body>
+        {/* ▼ 追加: ここに置くと全ページの上部に表示されます */}
+        <Header />
+        
+        <main style={{ minHeight: "calc(100vh - 56px)" }}>
+          {children}
+        </main>
+        
+        <Toaster position="bottom-right" />
       </body>
     </html>
-  );
+      );
 }

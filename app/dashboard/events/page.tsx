@@ -238,20 +238,6 @@ toast.error(`登録エラー:${imageCheckResult.reason}`, {
 
   return (
     <>
-      <header className="site-header">
-        <div className="container header-inner">
-          <Link href="/dashboard" className="logo-wrap" style={{ textDecoration: 'none' }}>
-            <div className="logo-mark">C</div>
-            <div className="logo-text-block">
-              <div className="logo-text-main">Castket</div>
-              <div className="logo-text-sub">Event Manager</div>
-            </div>
-          </Link>
-          <div className="header-actions">
-            <Link href="/dashboard" className="btn btn-ghost">← ダッシュボードに戻る</Link>
-          </div>
-        </div>
-      </header>
 
       <main className="section section-soft" style={{ minHeight: "100vh" }}>
         <div className="container">

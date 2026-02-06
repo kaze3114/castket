@@ -163,20 +163,6 @@ export default function EventListPage() {
 
   return (
     <>
-      <header className="site-header">
-        <div className="container header-inner">
-          <Link href="/" className="logo-wrap" style={{ textDecoration: 'none' }}>
-            <div className="logo-mark">C</div>
-            <div className="logo-text-block">
-              <div className="logo-text-main">Castket</div>
-              <div className="logo-text-sub">Event List</div>
-            </div>
-          </Link>
-          <div className="header-actions">
-            <Link href="/dashboard" className="btn btn-ghost">マイページへ</Link>
-          </div>
-        </div>
-      </header>
 
       <main className="section section-soft" style={{ minHeight: "100vh" }}>
         <div className="container">
