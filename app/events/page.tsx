@@ -5,23 +5,18 @@ import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import dayjs from "dayjs";
 import "dayjs/locale/ja";
-// ▼ 定数をインポート
 import { EVENT_TAGS, WEEKDAY_MAP } from "@/lib/constants";
 
 dayjs.locale("ja");
 
 export default function EventListPage() {
-  // ▼▼▼ 追加: 日付・時間の表示を整える関数 ▼▼▼
-// ▼▼▼ 修正: 日付と時間を分かりやすくデザインして表示する関数 ▼▼▼
   const renderEventSchedule = (event: any) => {
-    // 秒を削る
     const start = event.start_time ? event.start_time.slice(0, 5) : "";
     const end = event.end_time ? event.end_time.slice(0, 5) : "";
     const timeStr = start || end ? `${start} ~ ${end}` : "";
 
     let dateContent;
 
-    // スケジュールタイプごとの日付表示
     if (event.schedule_type === "one_time") {
       dateContent = (
         <>
@@ -45,7 +40,6 @@ export default function EventListPage() {
 
     return (
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" }}>
-        {/* 日付エリア: 強調カラー */}
         <div style={{ 
           color: "var(--accent)", 
           fontWeight: "bold", 
@@ -56,7 +50,6 @@ export default function EventListPage() {
           {dateContent}
         </div>
         
-        {/* 時間エリア: グレー背景で区別 */}
         {timeStr && (
           <div style={{ 
             display: "flex", 
@@ -64,7 +57,7 @@ export default function EventListPage() {
             gap: "4px", 
             fontSize: "0.8rem", 
             color: "#555", 
-            background: "#f3f4f6", // 薄いグレーの背景
+            background: "#f3f4f6", 
             padding: "2px 8px", 
             borderRadius: "4px",
             border: "1px solid #eee"
@@ -83,7 +76,6 @@ export default function EventListPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list" | "compact">("grid");
   const [sortBy, setSortBy] = useState<"date" | "likes" | "capacity">("date");
 
-  // 絞り込みステート
   const [filterFreq, setFilterFreq] = useState<string | null>(null);
   const [filterTime, setFilterTime] = useState<string | null>(null);
   const [filterGenre, setFilterGenre] = useState<string | null>(null);
@@ -98,12 +90,28 @@ export default function EventListPage() {
       if (error) {
         console.error(error);
       } else {
+        // ▼ 修正: 今日の日付を取得して、終了したイベントを弾く
+        const todayStr = new Date().toISOString().split("T")[0];
+
         const formattedEvents = (data || []).map((event: any) => ({
           ...event,
           likesCount: event.likes ? event.likes[0]?.count || 0 : 0,
           tags: event.tags || []
         }));
-        setEvents(formattedEvents);
+
+        // ▼ 修正: 未来のイベント、または定期イベントだけを残す
+        const activeEvents = formattedEvents.filter((event) => {
+          if (event.schedule_type === "one_time") {
+            return event.event_date >= todayStr;
+          }
+          if (event.schedule_type === "irregular" && event.irregular_dates) {
+            return event.irregular_dates.some((d: string) => d >= todayStr);
+          }
+          // 毎週(weekly)は終了日がないためそのまま表示
+          return true; 
+        });
+
+        setEvents(activeEvents);
       }
       setLoading(false);
     };
@@ -111,7 +119,6 @@ export default function EventListPage() {
     fetchEvents();
   }, []);
 
-  // 絞り込みロジック
   const filteredEvents = events.filter((event) => {
     if (filterFreq) {
       if (event.schedule_type !== filterFreq) return false;
@@ -130,14 +137,12 @@ export default function EventListPage() {
         }
       }
     }
-    // ▼ constantsのタグで絞り込み
     if (filterGenre) {
       if (!event.tags || !event.tags.includes(filterGenre)) return false;
     }
     return true;
   });
 
-  // 並べ替えロジック
   const sortedEvents = [...filteredEvents].sort((a, b) => {
     if (sortBy === "date") {
       return dayjs(a.event_date).diff(dayjs(b.event_date));
@@ -163,12 +168,17 @@ export default function EventListPage() {
 
   return (
     <>
-
       <main className="section section-soft" style={{ minHeight: "100vh" }}>
         <div className="container">
           
           <div style={{ marginBottom: "24px" }}>
-            <h1 className="section-title" style={{ margin: "0 0 16px 0", textAlign: "left" }}>キャスト募集中のイベント</h1>
+            {/* ▼ 修正: タイトルの横に「過去のイベントを見る」リンクを配置 */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+              <h1 className="section-title" style={{ margin: 0, textAlign: "left" }}>キャスト募集中のイベント</h1>
+              <Link href="/events/past" style={{ fontSize: "0.95rem", color: "var(--accent)", textDecoration: "underline", fontWeight: "bold" }}>
+                📜 過去のイベントログを見る
+              </Link>
+            </div>
             
             <div className="filter-box" style={{ background: "#fff", padding: "20px", borderRadius: "12px", border: "1px solid #eee", marginBottom: "24px" }}>
               <div style={{ fontSize: "0.9rem", fontWeight: "bold", marginBottom: "12px", color: "#333", display: "flex", justifyContent: "space-between" }}>
@@ -199,7 +209,6 @@ export default function EventListPage() {
                   </div>
                 </div>
 
-                {/* ▼ constants の EVENT_TAGS を使用 */}
                 <div className="filter-row">
                   <span className="filter-label">タグ:</span>
                   <div className="filter-options">
@@ -239,7 +248,6 @@ export default function EventListPage() {
             </div>
           </div>
           
-          {/* イベントリスト描画 */}
           {sortedEvents.length === 0 ? (
             <div className="card" style={{ textAlign: "center", padding: "60px" }}>
               <p>条件に一致するイベントはありませんでした。</p>
@@ -254,7 +262,6 @@ export default function EventListPage() {
                       <span style={{ background: "rgba(0,0,0,0.6)", color: "#fff", padding: "4px 8px", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "bold" }}>
                         {event.schedule_type === "one_time" ? "単発" : event.schedule_type === "weekly" ? "毎週" : "不定期"}
                       </span>
-                      {/* タグ表示 */}
                       {event.tags && event.tags.map((tag: string) => (
                          <span key={tag} style={{ background: "rgba(124, 58, 237, 0.9)", color: "#fff", padding: "4px 8px", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "bold" }}>
                            {tag}
@@ -277,12 +284,10 @@ export default function EventListPage() {
                   </div>
                   <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column", width: "100%" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-
-                  <div style={{ marginBottom: "8px" }}>
-                    {renderEventSchedule(event)}
-                  </div>
-
-                  <div style={{ fontSize: "0.8rem", color: "#ff4757", fontWeight: "bold", display: "flex", alignItems: "center", gap: "4px" }}>
+                      <div style={{ marginBottom: "8px" }}>
+                        {renderEventSchedule(event)}
+                      </div>
+                      <div style={{ fontSize: "0.8rem", color: "#ff4757", fontWeight: "bold", display: "flex", alignItems: "center", gap: "4px" }}>
                         <span>♥</span> {event.likesCount}
                       </div>
                     </div>

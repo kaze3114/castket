@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useParams, useRouter, usePathname } from "next/navigation"; // usePathnameを追加
+import { useParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { WEEKDAY_MAP } from "@/lib/constants";
 import { checkUserRestriction } from "@/app/actions/moderate";
@@ -13,7 +13,7 @@ import toast from "react-hot-toast";
 export default function EventDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const pathname = usePathname(); // 現在のURLパスを取得
+  const pathname = usePathname();
   
   const [event, setEvent] = useState<any>(null);
   const [organizer, setOrganizer] = useState<any>(null);
@@ -33,11 +33,10 @@ export default function EventDetailPage() {
   const [likeCount, setLikeCount] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
 
-  // ★追加: シェア用URL
+  // シェア用URL
   const [shareUrl, setShareUrl] = useState("");
 
   useEffect(() => {
-    // クライアントサイドでURLを確定させる
     setShareUrl(window.location.href);
 
     const fetchAllData = async () => {
@@ -117,7 +116,6 @@ export default function EventDetailPage() {
 
   const handleApply = async () => {
     if (!currentUser) {
-      // ★修正: ログイン後にこのページに戻ってくるように設定
       router.push(`/login?next=${pathname}`);
       return;
     }
@@ -155,7 +153,6 @@ export default function EventDetailPage() {
     }
   };
 
-  // ★追加: シェアボタンの処理
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareUrl);
     toast.success("リンクをコピーしました！");
@@ -177,6 +174,20 @@ export default function EventDetailPage() {
   }
 
   const isMyEvent = currentUser && currentUser.id === event.organizer_id;
+
+  // ▼▼▼ 追加：過去のイベントかどうかを判定 ▼▼▼
+  const checkIsEnded = () => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    if (event.schedule_type === "one_time") {
+      return event.event_date < todayStr;
+    }
+    if (event.schedule_type === "irregular" && event.irregular_dates) {
+      return event.irregular_dates.every((d: string) => d < todayStr);
+    }
+    return false; // weeklyは終了しない
+  };
+  const isEnded = checkIsEnded();
+  // ▲▲▲ 追加ここまで ▲▲▲
 
   return (
     <>
@@ -200,10 +211,16 @@ export default function EventDetailPage() {
           
           <article className="card" style={{ padding: 0, overflow: "hidden" }}>
             
-            <div style={{ width: "100%", background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
+            <div style={{ width: "100%", background: "var(--bg)", borderBottom: "1px solid var(--border)", position: "relative" }}>
+              {/* イベント終了済みの場合は画像の上にラベルを出す */}
+              {isEnded && (
+                <div style={{ position: "absolute", top: "16px", left: "16px", background: "#333", color: "#fff", padding: "6px 16px", borderRadius: "8px", fontWeight: "bold", fontSize: "0.9rem", zIndex: 10 }}>
+                  終了済イベント
+                </div>
+              )}
               {event.banner_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={event.banner_url} alt={event.title} style={{ width: "100%", height: "auto", maxHeight: "500px", objectFit: "contain", display: "block", margin: "0 auto" }} />
+                <img src={event.banner_url} alt={event.title} style={{ width: "100%", height: "auto", maxHeight: "500px", objectFit: "contain", display: "block", margin: "0 auto", filter: isEnded ? "grayscale(30%)" : "none" }} />
               ) : (
                 <div style={{ padding: "60px", textAlign: "center", color: "var(--muted)", fontWeight: "bold" }}>NO IMAGE</div>
               )}
@@ -243,7 +260,7 @@ export default function EventDetailPage() {
               </div>
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: "16px", marginBottom: "24px" }}>
-                <h1 style={{ fontSize: "2rem", fontWeight: "bold", lineHeight: 1.4, margin: 0, flex: 1 }}>
+                <h1 style={{ fontSize: "2rem", fontWeight: "bold", lineHeight: 1.4, margin: 0, flex: 1, color: isEnded ? "#666" : "var(--text)" }}>
                   {event.title}
                 </h1>
                 
@@ -262,7 +279,6 @@ export default function EventDetailPage() {
                 </div>
               </div>
 
-              {/* ▼▼▼ 追加：SNSシェアボタンエリア ▼▼▼ */}
               <div style={{ display: "flex", gap: "12px", marginBottom: "32px" }}>
                 <a 
                   href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(event.title + " | Castket")}&url=${encodeURIComponent(shareUrl)}`} 
@@ -281,13 +297,11 @@ export default function EventDetailPage() {
                   🔗 URLをコピー
                 </button>
               </div>
-              {/* ▲▲▲ 追加ここまで ▲▲▲ */}
 
               <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.8, fontSize: "1rem", color: "var(--text)", marginBottom: "40px" }}>
                 {event.description}
               </div>
 
-              {/* ... (参加者限定情報の表示部分は変更なし) ... */}
               {( (entryStatus === "Accepted") || isMyEvent ) && event.private_info && (
                 <div style={{ background: "#fdfaff", border: "2px dashed var(--accent)", borderRadius: "12px", padding: "20px", marginBottom: "32px", textAlign: "left" }}>
                   <h3 style={{ color: "var(--accent)", fontSize: "1.1rem", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>🔒 参加者限定情報</h3>
@@ -303,14 +317,9 @@ export default function EventDetailPage() {
                     {event.requirements}
                   </div>
                   <div style={{ textAlign: "center" }}>
-                    {!currentUser ? (
-                      <div>
-                        <p style={{ marginBottom: "12px" }}>応募するにはログインが必要です</p>
-                        {/* ログイン後にこのページに戻るように設定 */}
-                        <Link href={`/login?next=${pathname}`}><button className="btn btn-primary">ログインして応募する</button></Link>
-                      </div>
-                    ) : isMyEvent ? (
-                      // ▼▼▼ 修正：主催者用の管理ボタンを表示 ▼▼▼
+                    
+                    {/* ▼▼▼ 条件分岐ロジックを修正 ▼▼▼ */}
+                    {isMyEvent ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: "12px", alignItems: "center" }}>
                         <div style={{ color: "var(--accent)", fontWeight: "bold" }}>👑 あなたが主催のイベントです</div>
                         <div style={{ display: "flex", gap: "12px" }}>
@@ -322,21 +331,49 @@ export default function EventDetailPage() {
                             </Link>
                         </div>
                       </div>
-                      // ▲▲▲ 修正ここまで ▲▲▲
                     ) : hasApplied ? (
-                      <div><button className="btn btn-secondary" disabled style={{ cursor: "not-allowed", opacity: 0.7 }}>{entryStatus === "Pending" ? "📨 応募済み（返信待ち）" : entryStatus === "Accepted" ? "🎉 出演決定！" : "見送りとなりました"}</button><p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "8px" }}>ダッシュボードで状況を確認できます</p></div>
+                      <div>
+                        <button className="btn btn-secondary" disabled style={{ cursor: "not-allowed", opacity: 0.7 }}>
+                          {entryStatus === "Pending" ? "📨 応募済み（返信待ち）" : entryStatus === "Accepted" ? "🎉 出演決定！" : "見送りとなりました"}
+                        </button>
+                        <p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "8px" }}>ダッシュボードで状況を確認できます</p>
+                      </div>
+                    ) : isEnded ? (
+                      // 終了済みの場合の表示
+                      <div>
+                        <button className="btn btn-secondary" disabled style={{ cursor: "not-allowed", opacity: 0.8, background: "#888", border: "1px solid #888", color: "#fff", padding: "12px 32px", fontSize: "1.1rem" }}>
+                          ⛔ このイベントの募集は終了しました
+                        </button>
+                        <p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "8px" }}>過去のイベントのため応募できません</p>
+                      </div>
                     ) : isFull ? (
-                      <div><button className="btn btn-secondary" disabled style={{ cursor: "not-allowed", opacity: 0.8, background: "#888", border: "1px solid #888", color: "#fff" }}>🈵 満員御礼（募集終了）</button><p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "8px" }}>定員に達したため、応募を締め切りました</p></div>
+                      <div>
+                        <button className="btn btn-secondary" disabled style={{ cursor: "not-allowed", opacity: 0.8, background: "#ef4444", border: "1px solid #ef4444", color: "#fff", padding: "12px 32px", fontSize: "1.1rem" }}>
+                          🈵 満員御礼（募集終了）
+                        </button>
+                        <p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "8px" }}>定員に達したため、応募を締め切りました</p>
+                      </div>
+                    ) : !currentUser ? (
+                      <div>
+                        <p style={{ marginBottom: "12px", color: "var(--muted)", fontWeight: "bold" }}>応募するにはログインが必要です</p>
+                        <Link href={`/login?next=${pathname}`}><button className="btn btn-primary">ログインして応募する</button></Link>
+                      </div>
                     ) : (
-                      <div><button onClick={handleApply} disabled={applying} className="btn btn-primary" style={{ padding: "12px 32px", fontSize: "1.1rem" }}>{applying ? "送信中..." : "🙋 このイベントに応募する"}</button><p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "8px" }}>ボタンを押すと主催者へのメッセージを入力できます</p></div>
+                      <div>
+                        <button onClick={handleApply} disabled={applying} className="btn btn-primary" style={{ padding: "12px 32px", fontSize: "1.1rem" }}>
+                          {applying ? "送信中..." : "🙋 このイベントに応募する"}
+                        </button>
+                        <p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "8px" }}>ボタンを押すと主催者へのメッセージを入力できます</p>
+                      </div>
                     )}
+                    {/* ▲▲▲ 条件分岐ロジックの修正ここまで ▲▲▲ */}
+
                   </div>
                 </div>
               ) : (
                 <div style={{ textAlign: "center", padding: "20px", color: "var(--muted)", background: "var(--bg)", borderRadius: "8px" }}><p>※現在、このイベントはキャスト募集を行っていません。</p></div>
               )}
 
-              {/* ... (不定期開催日リストと主催者情報はそのまま) ... */}
               {event.schedule_type === "irregular" && event.irregular_dates && (
                 <div style={{ background: "var(--bg)", padding: "20px", borderRadius: "8px", marginBottom: "40px" }}><h3 style={{ fontSize: "1rem", fontWeight: "bold", marginBottom: "10px" }}>📅 開催予定日リスト</h3><div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>{event.irregular_dates.map((date: string) => (<span key={date} style={{ background: "#fff", padding: "6px 12px", borderRadius: "4px", border: "1px solid var(--border)" }}>{date}</span>))}</div></div>
               )}

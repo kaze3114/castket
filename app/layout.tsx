@@ -5,6 +5,7 @@ import { Toaster } from "react-hot-toast";
 import NotificationListener from "@/components/NotificationListener";
 import Header from "@/components/Header";
 
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -15,10 +16,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Castket |　VRChatイベントプラットフォーム",
-  description: "VRChatのイベント主催者とキャストをつなぐマッチングプラットフォーム",
-};
 
 export default function RootLayout({
   children,
@@ -39,4 +36,30 @@ export default function RootLayout({
       </body>
     </html>
       );
+}
+
+export const metadata: Metadata = {
+  title: 'Castket | VRChatイベントプラットフォーム',
+  description: 'イベントクリエイターとパフォーマーをつなぐVRChat特化型キャスティング・ハブ',
+  openGraph: {
+    title: 'Castket | VRChatイベントプラットフォーム',
+    description: 'イベントクリエイターとパフォーマーをつなぐVRChat特化型キャスティング・ハブ',
+    url: 'https://www.castket.net',
+    siteName: 'Castket',
+    images: [
+      {
+        url: 'https://www.castket.net/ogp-image.png', // 【重要】絶対パスで指定
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: 'ja_JP',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image', // 大きな画像で表示する設定
+    title: 'Castket | VRChatイベントプラットフォーム',
+    description: 'イベントクリエイターとパフォーマーをつなぐVRChat特化型キャスティング・ハブ',
+    images: ['https://www.castket.net/ogp-image.png'], // 【重要】絶対パスで指定
+  },
 }
