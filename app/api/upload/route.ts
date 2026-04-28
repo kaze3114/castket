@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 // R2クライアントの作成
 const R2 = new S3Client({
@@ -12,8 +14,19 @@ const R2 = new S3Client({
   },
 });
 
-// ★重要: ここは "export default" ではなく "export async function POST" です！
 export async function POST(request: Request) {
+  // 認証チェック
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  );
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { fileType } = await request.json();
     

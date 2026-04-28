@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [receivedEventLikes, setReceivedEventLikes] = useState(0);
 
   const [receivedOffers, setReceivedOffers] = useState<any[]>([]);
+  const [organizerProfiles, setOrganizerProfiles] = useState<any[]>([]);
   const [sentOffers, setSentOffers] = useState<any[]>([]);
 
   // ▼▼▼ モーダル制御用のステートを追加 ▼▼▼
@@ -67,8 +68,22 @@ export default function Dashboard() {
     const { data: eventsData } = await supabase.from("events").select("*").eq("organizer_id", user.id).order("created_at", { ascending: false });
     if (eventsData) setMyEvents(eventsData);
 
-    const { data: entriesData } = await supabase.from("entries").select("*, event:events(title, id)").eq("cast_id", user.id).order("created_at", { ascending: false });
-    if (entriesData) setMyEntries(entriesData);
+    const { data: entriesData } = await supabase.from("entries").select("*, event:events(title, id, organizer_id)").eq("cast_id", user.id).order("created_at", { ascending: false });
+    if (entriesData) {
+      setMyEntries(entriesData);
+      const organizerIds = [...new Set(
+        entriesData
+          .filter((e: any) => e.status === "Accepted" && e.event?.organizer_id)
+          .map((e: any) => e.event.organizer_id)
+      )];
+      if (organizerIds.length > 0) {
+        const { data: orgProfiles } = await supabase
+          .from("profiles")
+          .select("user_id, twitter_id, vrchat_id")
+          .in("user_id", organizerIds);
+        if (orgProfiles) setOrganizerProfiles(orgProfiles);
+      }
+    }
 
     const { data: bmEvents } = await supabase.from("event_bookmarks").select("created_at, event:events(*)").eq("user_id", user.id).order("created_at", { ascending: false });
     if (bmEvents) setBookmarkedEvents(bmEvents.map((item: any) => item.event).filter((e: any) => e !== null));
@@ -99,7 +114,7 @@ const { data: bmCasts } = await supabase
 
     const { data: sOffers } = await supabase
       .from("offers")
-      .select("*, event:events(title, id), receiver:profiles!receiver_id(display_name, avatar_url)")
+      .select("*, event:events(title, id), receiver:profiles!receiver_id(display_name, avatar_url, twitter_id, vrchat_id)")
       .eq("sender_id", user.id)
       .order("created_at", { ascending: false });
     if (sOffers) setSentOffers(sOffers);
@@ -237,24 +252,37 @@ const { data: bmCasts } = await supabase
                   <h3 className="section-lead" style={{ textAlign: "left", marginBottom: "16px" }}>📤 送ったオファー</h3>
                   <div style={{ display: "grid", gap: "16px" }}>
                     {sentOffers.map((offer) => (
-                      <div key={offer.id} className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", opacity: offer.status === 'rejected' ? 0.7 : 1 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                           <div style={{width: "40px", height: "40px", borderRadius: "50%", background: "#eee", overflow: "hidden"}}>
+                      <div key={offer.id} className="card" style={{ opacity: offer.status === 'rejected' ? 0.7 : 1 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                            <div style={{width: "40px", height: "40px", borderRadius: "50%", background: "#eee", overflow: "hidden"}}>
                               {offer.receiver?.avatar_url && <img src={offer.receiver.avatar_url} style={{width:"100%", height:"100%", objectFit:"cover"}} />}
-                           </div>
-                           <div>
-                              <div style={{ fontWeight: "bold" }}>
-                                To: {offer.receiver?.display_name} さん
-                              </div>
-                              <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>
-                                イベント: {offer.event?.title}
-                              </div>
-                           </div>
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: "bold" }}>To: {offer.receiver?.display_name} さん</div>
+                              <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>イベント: {offer.event?.title}</div>
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
+                            <StatusBadge status={offer.status} />
+                            <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{new Date(offer.created_at).toLocaleDateString()}</span>
+                          </div>
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
-                          <StatusBadge status={offer.status} />
-                          <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{new Date(offer.created_at).toLocaleDateString()}</span>
-                        </div>
+                        {offer.status === "accepted" && (offer.cast_shared_contacts?.length > 0) && (
+                          <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #eee", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                            <span style={{ fontSize: "0.8rem", color: "var(--muted)", marginRight: "4px" }}>📬 共有された連絡先:</span>
+                            {offer.cast_shared_contacts.includes("twitter") && offer.receiver?.twitter_id && (
+                              <a href={`https://x.com/${offer.receiver.twitter_id}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.85rem", fontWeight: "bold", color: "#000", background: "#f0f0f0", padding: "4px 10px", borderRadius: "99px", textDecoration: "none" }}>
+                                𝕏 @{offer.receiver.twitter_id}
+                              </a>
+                            )}
+                            {offer.cast_shared_contacts.includes("vrchat") && offer.receiver?.vrchat_id && (
+                              <a href={`https://vrchat.com/home/user/${offer.receiver.vrchat_id}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.85rem", fontWeight: "bold", color: "var(--accent)", background: "rgba(124,58,237,0.08)", padding: "4px 10px", borderRadius: "99px", textDecoration: "none" }}>
+                                VRChat プロフィール
+                              </a>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -267,17 +295,36 @@ const { data: bmCasts } = await supabase
                   <div style={{ display: "grid", gap: "16px" }}>
                     {myEntries.map((entry) => (
                       entry.event?.id ? (
-                        <Link href={`/events/${entry.event.id}`} key={entry.id} style={{ textDecoration: "none", color: "inherit" }}>
-                          <div className="card hover-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <div>
-                              <div style={{ fontWeight: "bold", fontSize: "1.1rem" }}>{entry.event.title}</div>
-                              <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>応募日: {new Date(entry.created_at).toLocaleDateString()}</div>
+                        <div key={entry.id} className="card">
+                          <Link href={`/events/${entry.event.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+                            <div className="hover-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0" }}>
+                              <div>
+                                <div style={{ fontWeight: "bold", fontSize: "1.1rem" }}>{entry.event.title}</div>
+                                <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>応募日: {new Date(entry.created_at).toLocaleDateString()}</div>
+                              </div>
+                              <div><StatusBadge status={entry.status} /></div>
                             </div>
-                            <div>
-                              <StatusBadge status={entry.status} />
-                            </div>
-                          </div>
-                        </Link>
+                          </Link>
+                          {entry.status === "Accepted" && (entry.organizer_shared_contacts?.length > 0) && (() => {
+                            const org = organizerProfiles.find((p: any) => p.user_id === entry.event?.organizer_id);
+                            if (!org) return null;
+                            return (
+                              <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #eee", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                                <span style={{ fontSize: "0.8rem", color: "var(--muted)", marginRight: "4px" }}>📬 主催者の連絡先:</span>
+                                {entry.organizer_shared_contacts.includes("twitter") && org.twitter_id && (
+                                  <a href={`https://x.com/${org.twitter_id}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.85rem", fontWeight: "bold", color: "#000", background: "#f0f0f0", padding: "4px 10px", borderRadius: "99px", textDecoration: "none" }}>
+                                    𝕏 @{org.twitter_id}
+                                  </a>
+                                )}
+                                {entry.organizer_shared_contacts.includes("vrchat") && org.vrchat_id && (
+                                  <a href={`https://vrchat.com/home/user/${org.vrchat_id}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.85rem", fontWeight: "bold", color: "var(--accent)", background: "rgba(124,58,237,0.08)", padding: "4px 10px", borderRadius: "99px", textDecoration: "none" }}>
+                                    VRChat プロフィール
+                                  </a>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </div>
                       ) : (
                          <div key={entry.id} className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", opacity: 0.6 }}>
                            {/* ... */}
@@ -389,7 +436,8 @@ const { data: bmCasts } = await supabase
         isOpen={isReplyModalOpen}
         onClose={() => setIsReplyModalOpen(false)}
         offer={selectedOffer}
-        onUpdate={fetchData} // 返信後にデータを再取得
+        onUpdate={fetchData}
+        currentUserId={user?.id ?? ""}
       />
 
 {/* ▼▼▼ ブックマーク編集モーダル ▼▼▼ */}

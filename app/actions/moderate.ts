@@ -149,9 +149,30 @@ export async function checkContentSafety(text: string, userId: string) {
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `
-    テキスト: "${text}"
-    判定ルール: VRChatイベント募集として不適切ならNG。JSON返答。
-    { "isSafe": boolean, "reason": "短い理由" }
+あなたはVRChatコミュニティのイベント掲載モデレーターです。
+以下のテキストがイベント募集文として掲載可能かどうかを判定してください。
+
+【判定対象テキスト】
+"${text}"
+
+【掲載OK（isSafe: true）の基準】
+- VRChatの利用規約・コミュニティガイドラインに準ずる内容
+- スポーツ・格闘技・ボクシング・武道など競技系イベントの説明（「殴る」「戦う」「倒す」などの競技文脈での表現は問題なし）
+- 煽り文句・ハイプ表現・強調表現（「最強」「激アツ」「死ぬほど楽しい」など日常的な誇張表現は問題なし）
+- 比喩・暗喩・スラング（悪意のない文脈でのもの）
+- ゲーム内PvP・バトルイベント・対戦イベントの告知
+- 18歳以上向けのアルコールや成人向けの話題（VRChatのAge Verification範囲内）
+
+【掲載NG（isSafe: false）の基準】
+- 特定個人・グループへのヘイトスピーチ・差別的内容
+- 実在する人物の個人情報（ドクシング）
+- 詐欺・フィッシング・金銭トラブルを誘導する内容
+- 露骨な性的コンテンツの宣伝（VRChatのAge Verification対象外の場での告知）
+- 自傷・自殺を美化・誘導する内容
+- マルウェア・ハッキング行為の告知
+
+必ずJSON形式のみで返答してください。
+{ "isSafe": boolean, "reason": "短い理由（NGの場合のみ記載）" }
   `;
 
   try {
@@ -212,8 +233,24 @@ export async function checkImageSafety(imageUrl: string, userId: string) {
     const mimeType = imageResp.headers.get("content-type") || "image/jpeg";
 
     const prompt = `
-      画像チェック。不適切ならNG。JSON返答。
-      { "isSafe": boolean, "reason": "短い理由" }
+あなたはVRChatコミュニティのイベント掲載モデレーターです。
+以下の画像がイベントバナーとして掲載可能かどうかを判定してください。
+
+【掲載OK（isSafe: true）の基準】
+- VRChatのアバター・ワールドのスクリーンショット
+- スポーツ・格闘技・バトル系イベントのイラストや演出画像（競技文脈でのアクションシーンは問題なし）
+- アニメ・ゲーム風のキャラクターイラスト
+- イベントロゴ・タイトル画像・告知バナー
+- VRChatのAge Verification範囲内の成人向けコンテンツ
+
+【掲載NG（isSafe: false）の基準】
+- 露骨な性的描写（ポルノグラフィー）
+- 実写の過激な暴力・流血・グロテスク画像
+- 特定個人・グループへの差別・ヘイトを示す画像
+- 個人情報が写り込んでいる画像
+
+必ずJSON形式のみで返答してください。
+{ "isSafe": boolean, "reason": "短い理由（NGの場合のみ記載）" }
     `;
 
     const result = await model.generateContent([
@@ -243,11 +280,11 @@ export async function checkImageSafety(imageUrl: string, userId: string) {
       return { isSafe: false, reason: warningMsg };
     }
 
-    return { isSafe: resultJson.isSafe ?? false, reason: resultJson.reason || "判定不能" };
+    return { isSafe: resultJson.isSafe ?? true, reason: resultJson.reason || "" };
 
   } catch (error) {
     console.error("Image Check Error:", error);
-    return { isSafe: false, reason: "画像解析エラー" };
+    return { isSafe: true, reason: "" };
   }
 }
 

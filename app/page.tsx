@@ -19,6 +19,7 @@ const HERO_IMAGES = [
 ];
 
 export default function Home() {
+  
   const router = useRouter();
   
   const [popularCasts, setPopularCasts] = useState<any[]>([]); 
@@ -224,6 +225,7 @@ export default function Home() {
 
   return (
     <>
+
       <header className="site-header">
         <div className="container header-inner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Link href="/" className="logo-wrap" style={{ textDecoration: 'none' }}>

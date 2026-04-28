@@ -8,6 +8,8 @@ import { WEEKDAY_MAP } from "@/lib/constants";
 import { checkUserRestriction } from "@/app/actions/moderate";
 import LikeButton from "@/components/LikeButton";
 import BookmarkButton from "@/components/BookmarkButton";
+import EventChat from "@/components/EventChat";
+import ReviewSection from "@/components/ReviewSection";
 import toast from "react-hot-toast";
 
 export default function EventDetailPage() {
@@ -308,6 +310,14 @@ export default function EventDetailPage() {
                   <div style={{ whiteSpace: "pre-wrap", color: "var(--text)", fontSize: "0.95rem" }}>{event.private_info}</div>
                   <p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "12px" }}>※この情報は「出演決定」したメンバーと主催者にのみ表示されています。</p>
                 </div>
+              )}
+
+              {(entryStatus === "Accepted" || isMyEvent) && currentUser && (
+                <EventChat eventId={event.id} currentUserId={currentUser.id} />
+              )}
+
+              {(entryStatus === "Accepted" || isMyEvent) && currentUser && (
+                <ReviewSection event={event} currentUserId={currentUser.id} isMyEvent={!!isMyEvent} />
               )}
 
               {event.requirements ? (

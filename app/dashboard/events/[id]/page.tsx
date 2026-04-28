@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import MatchContactModal from "@/components/MatchContactModal";
 
 export default function EventEntryManager() {
   const params = useParams();
@@ -12,6 +13,10 @@ export default function EventEntryManager() {
   const [loading, setLoading] = useState(true);
   const [event, setEvent] = useState<any>(null);
   const [entries, setEntries] = useState<any[]>([]);
+  const [ownProfile, setOwnProfile] = useState<{ twitter_id: string; vrchat_id: string } | null>(null);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [contactModalLoading, setContactModalLoading] = useState(false);
+  const [pendingAcceptEntryId, setPendingAcceptEntryId] = useState<number | null>(null);
 
   // データ読み込み
   useEffect(() => {
@@ -43,6 +48,13 @@ export default function EventEntryManager() {
       }
 
       setEvent(eventData);
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("twitter_id, vrchat_id")
+        .eq("user_id", user.id)
+        .single();
+      if (profileData) setOwnProfile(profileData);
 
       // 3. このイベントへの応募(entries)を取得
       const { data: entryData, error: entryError } = await supabase
@@ -79,27 +91,42 @@ export default function EventEntryManager() {
     fetchData();
   }, [params, router]);
 
-  // ステータス更新処理
-  const updateStatus = async (entryId: number, newStatus: string) => {
-    if (!confirm(`この応募を「${newStatus}」に変更しますか？`)) return;
+  const handleReject = async (entryId: number) => {
+    if (!confirm("この応募を見送りにしますか？")) return;
+    try {
+      const { error } = await supabase.from("entries").update({ status: "Rejected" }).eq("id", entryId);
+      if (error) throw error;
+      setEntries(entries.map(e => e.id === entryId ? { ...e, status: "Rejected" } : e));
+      toast.success("ステータスを更新しました。");
+    } catch (error: any) {
+      toast.error("更新エラー: " + error.message);
+    }
+  };
 
+  const handleAcceptClick = (entryId: number) => {
+    setPendingAcceptEntryId(entryId);
+    setIsContactModalOpen(true);
+  };
+
+  const handleContactConfirm = async (selected: string[]) => {
+    if (!pendingAcceptEntryId) return;
+    setContactModalLoading(true);
     try {
       const { error } = await supabase
         .from("entries")
-        .update({ status: newStatus })
-        .eq("id", entryId); // entriesのidで指定
-
+        .update({ status: "Accepted", organizer_shared_contacts: selected })
+        .eq("id", pendingAcceptEntryId);
       if (error) throw error;
-
-      // 画面上の表示も更新
-      setEntries(entries.map(e => 
-        e.id === entryId ? { ...e, status: newStatus } : e
+      setEntries(entries.map(e =>
+        e.id === pendingAcceptEntryId ? { ...e, status: "Accepted", organizer_shared_contacts: selected } : e
       ));
-      
-      toast.error("ステータスを更新しました！");
-
+      toast.success("採用しました！🎉");
+      setIsContactModalOpen(false);
+      setPendingAcceptEntryId(null);
     } catch (error: any) {
-      toast.error("更新エラー: " + error.message);
+      toast.error("エラー: " + error.message);
+    } finally {
+      setContactModalLoading(false);
     }
   };
 
@@ -197,20 +224,20 @@ export default function EventEntryManager() {
                       <Link href={`/casts/${entry.cast_id}`} target="_blank">
                         <button className="btn btn-ghost" style={{ fontSize: "0.9rem" }}>詳細プロフィール確認</button>
                       </Link>
-                      
+
                       {entry.status !== "Accepted" && (
-                        <button 
-                          onClick={() => updateStatus(entry.id, "Accepted")}
+                        <button
+                          onClick={() => handleAcceptClick(entry.id)}
                           className="btn btn-primary"
                           style={{ background: "#22c55e", borderColor: "#22c55e" }}
                         >
                           採用する
                         </button>
                       )}
-                      
+
                       {entry.status !== "Rejected" && (
-                        <button 
-                          onClick={() => updateStatus(entry.id, "Rejected")}
+                        <button
+                          onClick={() => handleReject(entry.id)}
                           className="btn btn-ghost"
                           style={{ color: "#ef4444", borderColor: "#ef4444", border: "1px solid" }}
                         >
@@ -226,6 +253,15 @@ export default function EventEntryManager() {
           </div>
         </div>
       </main>
+
+      <MatchContactModal
+        isOpen={isContactModalOpen}
+        onClose={() => { setIsContactModalOpen(false); setPendingAcceptEntryId(null); }}
+        twitterId={ownProfile?.twitter_id ?? ""}
+        vrchatId={ownProfile?.vrchat_id ?? ""}
+        onConfirm={handleContactConfirm}
+        loading={contactModalLoading}
+      />
     </>
   );
 }

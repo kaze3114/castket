@@ -36,6 +36,8 @@ export default function EditProfilePage() {
   const [twitterId, setTwitterId] = useState("");
   const [vrchatId, setVrchatId] = useState("");
 
+  const [showReviewComments, setShowReviewComments] = useState(true);
+
   // アバター関連
   const [previewUrl, setPreviewUrl] = useState(""); // 表示用URL
   const [avatarFile, setAvatarFile] = useState<File | null>(null); // アップロード待ちファイル
@@ -72,6 +74,7 @@ export default function EditProfilePage() {
         // ▼▼▼ 追加: DBから読み込んでセット ▼▼▼
         setTwitterId(profile.twitter_id || "");
         setVrchatId(profile.vrchat_id || "");
+        setShowReviewComments(profile.show_review_comments ?? true);
         
         const currentUrl = profile.avatar_url || "";
         setPreviewUrl(currentUrl);
@@ -260,6 +263,7 @@ export default function EditProfilePage() {
         // ▼▼▼ 追加: 保存データに含める ▼▼▼
         twitter_id: twitterId,
         vrchat_id: vrchatId,
+        show_review_comments: showReviewComments,
 
         updated_at: new Date().toISOString(),
       };
@@ -437,6 +441,34 @@ export default function EditProfilePage() {
                 </label>
               )}
             </div>
+          </div>
+
+          {/* レビュー公開設定 */}
+          <div style={{ borderTop: "1px solid #eee", paddingTop: "24px" }}>
+            <h3 style={{ fontSize: "1.1rem", marginBottom: "8px" }}>⭐ レビュー設定</h3>
+            <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
+              <div
+                onClick={() => setShowReviewComments(v => !v)}
+                style={{
+                  width: "44px", height: "24px", borderRadius: "99px",
+                  background: showReviewComments ? "var(--accent)" : "#ccc",
+                  position: "relative", transition: "background 0.2s", flexShrink: 0,
+                }}
+              >
+                <div style={{
+                  width: "18px", height: "18px", borderRadius: "50%", background: "#fff",
+                  position: "absolute", top: "3px",
+                  left: showReviewComments ? "23px" : "3px",
+                  transition: "left 0.2s",
+                }} />
+              </div>
+              <span style={{ fontSize: "0.95rem" }}>
+                受け取ったレビューのコメントを公開する
+              </span>
+            </label>
+            <p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "6px" }}>
+              オフにするとコメントが非表示になります。★評価は常に公開されます。
+            </p>
           </div>
 
           {/* 保存ボタン */}

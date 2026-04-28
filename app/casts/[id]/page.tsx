@@ -28,6 +28,9 @@ export default function CastDetailPage() {
   const [myHostedEvents, setMyHostedEvents] = useState<any[]>([]);
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
 
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewerProfiles, setReviewerProfiles] = useState<Record<string, any>>({});
+
   const [shareUrl, setShareUrl] = useState("");
 
   const getRoleLabel = (value: string | null) => {
@@ -78,7 +81,26 @@ export default function CastDetailPage() {
       
       if (eventsData) setEvents(eventsData);
 
-      // 3. いいね情報
+      // 3. レビュー取得
+      const { data: reviewsData } = await supabase
+        .from("reviews")
+        .select("*")
+        .eq("reviewee_id", params.id);
+      if (reviewsData && reviewsData.length > 0) {
+        setReviews(reviewsData);
+        const reviewerIds = [...new Set(reviewsData.map((r: any) => r.reviewer_id))] as string[];
+        const { data: rProfiles } = await supabase
+          .from("profiles")
+          .select("user_id, display_name, avatar_url")
+          .in("user_id", reviewerIds);
+        if (rProfiles) {
+          const map: Record<string, any> = {};
+          rProfiles.forEach((p: any) => { map[p.user_id] = p; });
+          setReviewerProfiles(map);
+        }
+      }
+
+      // 4. いいね情報
       const { count: totalLikes } = await supabase
         .from("profile_likes")
         .select("id", { count: "exact", head: true })
@@ -326,6 +348,55 @@ export default function CastDetailPage() {
                   </Link>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* レビューセクション */}
+          {reviews.length > 0 && (
+            <div style={{ marginTop: "40px" }}>
+              <h2 className="section-title" style={{ textAlign: "left", fontSize: "1.5rem" }}>⭐ 受け取ったレビュー</h2>
+
+              <div style={{ marginBottom: "20px", padding: "16px 24px", background: "#fff", borderRadius: "12px", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "16px" }}>
+                <div style={{ fontSize: "3rem", fontWeight: "bold", color: "#f59e0b", lineHeight: 1 }}>
+                  {(reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)}
+                </div>
+                <div>
+                  <div style={{ display: "flex", gap: "2px", marginBottom: "4px" }}>
+                    {[1, 2, 3, 4, 5].map(n => {
+                      const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+                      return <span key={n} style={{ fontSize: "1.4rem", color: n <= Math.round(avg) ? "#f59e0b" : "#ddd" }}>★</span>;
+                    })}
+                  </div>
+                  <div style={{ color: "var(--muted)", fontSize: "0.9rem" }}>{reviews.length}件のレビュー</div>
+                </div>
+              </div>
+
+              {profile.show_review_comments && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {reviews.filter(r => r.comment).map(review => {
+                    const reviewer = reviewerProfiles[review.reviewer_id];
+                    return (
+                      <div key={review.id} style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: "10px", padding: "16px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+                          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#eee", overflow: "hidden", flexShrink: 0 }}>
+                            {reviewer?.avatar_url && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={reviewer.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            )}
+                          </div>
+                          <div style={{ fontWeight: "bold", fontSize: "0.9rem" }}>{reviewer?.display_name ?? "..."}</div>
+                          <div style={{ marginLeft: "auto", display: "flex", gap: "1px" }}>
+                            {[1, 2, 3, 4, 5].map(n => (
+                              <span key={n} style={{ fontSize: "1rem", color: n <= review.rating ? "#f59e0b" : "#ddd" }}>★</span>
+                            ))}
+                          </div>
+                        </div>
+                        <p style={{ fontSize: "0.9rem", color: "var(--text)", whiteSpace: "pre-wrap", margin: 0 }}>{review.comment}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>
