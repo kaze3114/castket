@@ -18,13 +18,13 @@ export default function Header() {
   const isTopPage = pathname === "/";
 
   const navItems = [
-    { label: "マイページ", href: "/dashboard" },
-    { label: "キャスト一覧", href: "/casts" },
-    { label: "イベント一覧", href: "/events" },
-    { label: "イベント作成", href: "/dashboard/events" },
-    { label: "フィードバック", href: "/feedback" },
-    { label: "ヘルプ", href: "/help" },
-  ];
+    { label: "マイページ", href: "/dashboard", loginRequired: true },
+    { label: "マイイベント", href: "/my-events", loginRequired: true },
+    { label: "キャスト一覧", href: "/casts", loginRequired: false },
+    { label: "イベント一覧", href: "/events", loginRequired: false },
+    { label: "フィードバック", href: "/feedback", loginRequired: false },
+    { label: "ヘルプ", href: "/help", loginRequired: false },
+  ].filter(item => !item.loginRequired || !!user);
 
   // ページ移動したらメニューを自動で閉じる
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function Header() {
     };
     getUser();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser(session.user);
       } else {

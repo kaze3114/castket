@@ -48,6 +48,7 @@ function StarSelector({ value, onChange, readonly = false }: { value: number; on
 
 function isEventEnded(event: any): boolean {
   const today = new Date().toISOString().split("T")[0];
+  if (event.end_date) return event.end_date < today;
   if (event.schedule_type === "one_time") return (event.event_date ?? "") < today;
   if (event.schedule_type === "irregular") return event.irregular_dates?.every((d: string) => d < today) ?? false;
   return false;

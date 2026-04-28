@@ -180,15 +180,28 @@ export default function EventDetailPage() {
   // ▼▼▼ 追加：過去のイベントかどうかを判定 ▼▼▼
   const checkIsEnded = () => {
     const todayStr = new Date().toISOString().split("T")[0];
-    if (event.schedule_type === "one_time") {
-      return event.event_date < todayStr;
-    }
+    if (event.end_date) return event.end_date < todayStr;
+    if (event.schedule_type === "one_time") return event.event_date < todayStr;
     if (event.schedule_type === "irregular" && event.irregular_dates) {
       return event.irregular_dates.every((d: string) => d < todayStr);
     }
-    return false; // weeklyは終了しない
+    return false;
   };
   const isEnded = checkIsEnded();
+
+  const isChatClosed = () => {
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    const cutoff = twoWeeksAgo.toISOString().split("T")[0];
+    if (event.end_date) return event.end_date < cutoff;
+    if (event.schedule_type === "one_time") return (event.event_date ?? "") < cutoff;
+    if (event.schedule_type === "irregular" && event.irregular_dates?.length > 0) {
+      const lastDate = [...event.irregular_dates].sort().pop() ?? "";
+      return lastDate < cutoff;
+    }
+    return false;
+  };
+  const chatClosed = isChatClosed();
   // ▲▲▲ 追加ここまで ▲▲▲
 
   return (
@@ -313,7 +326,13 @@ export default function EventDetailPage() {
               )}
 
               {(entryStatus === "Accepted" || isMyEvent) && currentUser && (
-                <EventChat eventId={event.id} currentUserId={currentUser.id} />
+                chatClosed ? (
+                  <div style={{ background: "#f5f5f5", border: "1px solid #ddd", borderRadius: "12px", padding: "20px", marginBottom: "32px", textAlign: "center" }}>
+                    <p style={{ color: "var(--muted)", fontSize: "0.9rem", margin: 0 }}>💬 チャットはイベント終了後2週間で閉鎖されました</p>
+                  </div>
+                ) : (
+                  <EventChat eventId={event.id} currentUserId={currentUser.id} />
+                )
               )}
 
               {(entryStatus === "Accepted" || isMyEvent) && currentUser && (

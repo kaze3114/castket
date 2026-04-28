@@ -46,6 +46,7 @@ export default function MyEventsPage() {
   const [singleDate, setSingleDate] = useState("");
   const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>([]);
   const [irregularDatesText, setIrregularDatesText] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   // ★追加: 今日の日付を取得 (YYYY-MM-DD形式)
   const todayStr = new Date().toISOString().split('T')[0];
@@ -90,6 +91,7 @@ export default function MyEventsPage() {
     setSingleDate("");
     setSelectedWeekdays([]);
     setIrregularDatesText("");
+    setEndDate("");
     setIsSubmitting(false);
   };
 
@@ -117,6 +119,7 @@ export default function MyEventsPage() {
     if (event.schedule_type === "irregular") {
       setIrregularDatesText(event.irregular_dates ? event.irregular_dates.join("\n") : "");
     }
+    setEndDate(event.end_date || "");
 
     // フォームまでスクロール
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -194,6 +197,7 @@ toast.error(`登録エラー:${imageCheckResult.reason}`, {
         event_date: scheduleType === "one_time" ? singleDate : null,
         weekdays: scheduleType === "weekly" ? selectedWeekdays : null,
         irregular_dates: scheduleType === "irregular" ? irregularDatesArray : null,
+        end_date: (scheduleType === "weekly" || scheduleType === "irregular") ? endDate || null : null,
       };
 
       if (editingEventId) {
@@ -358,6 +362,22 @@ toast.error(`登録エラー:${imageCheckResult.reason}`, {
                       <textarea className="input-field" rows={3} placeholder="例:&#13;2025-12-01&#13;2025-12-15" value={irregularDatesText} onChange={(e) => setIrregularDatesText(e.target.value)} />
                     )}
                   </div>
+
+                  {(scheduleType === "weekly" || scheduleType === "irregular") && (
+                    <div style={{ marginBottom: "16px" }}>
+                      <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "bold", marginBottom: "6px", color: "var(--muted)" }}>
+                        終了日（任意）
+                        <span style={{ fontWeight: "normal", marginLeft: "6px" }}>— チャット閉鎖・終了済み表示に使われます</span>
+                      </label>
+                      <input
+                        type="date"
+                        className="input-field"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                      />
+                    </div>
+                  )}
+
                   <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                     <div style={{ flex: 1 }}><input type="time" className="input-field" value={startTime} onChange={(e) => setStartTime(e.target.value)} /></div>
                     <span>〜</span>
