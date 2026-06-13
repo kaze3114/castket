@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import useSWR from "swr";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { NOTIFICATION_SWR_KEY, fetchNotificationCounts } from "@/components/NotificationListener";
 
 export default function Header() {
   const [user, setUser] = useState<any>(null);
@@ -16,6 +18,16 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const isTopPage = pathname === "/";
+
+  // 通知バッジ：NotificationListenerと同じSWRキーを共有してリクエストを重複させない
+  const { data: notif } = useSWR(user ? NOTIFICATION_SWR_KEY : null, fetchNotificationCounts, {
+    refreshInterval: 30000,
+    dedupingInterval: 10000,
+  });
+  // 要対応の未読＝届いたオファー＋応募＋未記入レビュー
+  const unreadCount = notif
+    ? notif.offerCount + notif.appCount + notif.pendingReviewCount
+    : 0;
 
   const navItems = [
     { label: "マイページ", href: "/dashboard", loginRequired: true },
@@ -124,6 +136,22 @@ export default function Header() {
               <button onClick={handleLogout} className="btn-ghost header-nav" style={{ fontSize: "0.85rem", color: "#666", border:"none", background:"none", cursor:"pointer" }}>
                 ログアウト
               </button>
+
+              {/* 通知ベル */}
+              <Link href="/dashboard" aria-label="通知" title="お知らせ" style={{ position: "relative", display: "flex", alignItems: "center", textDecoration: "none", fontSize: "1.3rem", lineHeight: 1 }}>
+                <span>🔔</span>
+                {unreadCount > 0 && (
+                  <span style={{
+                    position: "absolute", top: "-6px", right: "-8px",
+                    background: "#ff4757", color: "#fff", fontSize: "0.65rem", fontWeight: "bold",
+                    minWidth: "18px", height: "18px", padding: "0 4px", borderRadius: "9px",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    border: "2px solid #fff", boxSizing: "border-box",
+                  }}>
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </Link>
 
               <Link href="/dashboard">
                 <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "#eee", overflow: "hidden", border: "1px solid #ddd", cursor: "pointer" }}>

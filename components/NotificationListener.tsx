@@ -6,8 +6,10 @@ import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
-// データ取得関数
-const fetchNotificationCounts = async () => {
+// データ取得関数（Headerの通知バッジでも同じSWRキーで共有する）
+export const NOTIFICATION_SWR_KEY = "notification-check";
+
+export const fetchNotificationCounts = async () => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
@@ -131,7 +133,7 @@ export default function NotificationListener() {
     pendingReview: null,
   });
 
-  const { data } = useSWR('notification-check', fetchNotificationCounts, {
+  const { data } = useSWR(NOTIFICATION_SWR_KEY, fetchNotificationCounts, {
     refreshInterval: 30000,
     dedupingInterval: 10000, 
     refreshWhenHidden: true,

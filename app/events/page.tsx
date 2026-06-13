@@ -76,6 +76,7 @@ export default function EventListPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list" | "compact">("grid");
   const [sortBy, setSortBy] = useState<"date" | "likes" | "capacity">("date");
 
+  const [searchName, setSearchName] = useState<string>("");
   const [filterFreq, setFilterFreq] = useState<string | null>(null);
   const [filterTime, setFilterTime] = useState<string | null>(null);
   const [filterGenre, setFilterGenre] = useState<string | null>(null);
@@ -84,7 +85,7 @@ export default function EventListPage() {
     const fetchEvents = async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("*, likes(count)") 
+        .select("*, likes(count)")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -108,10 +109,28 @@ export default function EventListPage() {
             return event.irregular_dates.some((d: string) => d >= todayStr);
           }
           // 毎週(weekly)は終了日がないためそのまま表示
-          return true; 
+          return true;
         });
 
-        setEvents(activeEvents);
+        // ▼ 採用済み人数を取得して「残り枠」を正確に計算する
+        const ids = activeEvents.map((e) => e.id);
+        const acceptedMap: Record<string, number> = {};
+        if (ids.length > 0) {
+          const { data: accRows } = await supabase
+            .from("entries")
+            .select("event_id")
+            .eq("status", "Accepted")
+            .in("event_id", ids);
+          (accRows || []).forEach((r: { event_id: string }) => {
+            acceptedMap[r.event_id] = (acceptedMap[r.event_id] || 0) + 1;
+          });
+        }
+        const withCounts = activeEvents.map((e) => ({
+          ...e,
+          acceptedCount: acceptedMap[e.id] || 0,
+        }));
+
+        setEvents(withCounts);
       }
       setLoading(false);
     };
@@ -120,6 +139,12 @@ export default function EventListPage() {
   }, []);
 
   const filteredEvents = events.filter((event) => {
+    if (searchName) {
+      const kw = searchName.toLowerCase();
+      const inTitle = event.title?.toLowerCase().includes(kw);
+      const inDesc = event.description?.toLowerCase().includes(kw);
+      if (!inTitle && !inDesc) return false;
+    }
     if (filterFreq) {
       if (event.schedule_type !== filterFreq) return false;
     }
@@ -143,9 +168,21 @@ export default function EventListPage() {
     return true;
   });
 
+  // 並び替え用に、定期/不定期イベントでも比較できる「直近の開催日」を求める
+  const todayStr = new Date().toISOString().split("T")[0];
+  const getSortDate = (e: { schedule_type?: string; event_date?: string; irregular_dates?: string[] }): string => {
+    if (e.schedule_type === "one_time") return e.event_date || "9999-12-31";
+    if (e.schedule_type === "weekly") return todayStr; // 毎週開催は直近扱い
+    if (e.schedule_type === "irregular" && Array.isArray(e.irregular_dates)) {
+      const future = e.irregular_dates.filter((d: string) => d >= todayStr).sort();
+      return future[0] || "9999-12-31";
+    }
+    return "9999-12-31";
+  };
+
   const sortedEvents = [...filteredEvents].sort((a, b) => {
     if (sortBy === "date") {
-      return dayjs(a.event_date).diff(dayjs(b.event_date));
+      return getSortDate(a).localeCompare(getSortDate(b));
     }
     if (sortBy === "likes") {
       return b.likesCount - a.likesCount;
@@ -159,12 +196,13 @@ export default function EventListPage() {
   });
 
   const clearFilters = () => {
+    setSearchName("");
     setFilterFreq(null);
     setFilterTime(null);
     setFilterGenre(null);
   };
 
-  if (loading) return <div style={{ padding: "40px", textAlign: "center" }}>読み込み中...</div>;
+  const hasActiveFilters = !!(searchName || filterFreq || filterTime || filterGenre);
 
   return (
     <>
@@ -183,14 +221,18 @@ export default function EventListPage() {
             <div className="filter-box" style={{ background: "#fff", padding: "20px", borderRadius: "12px", border: "1px solid #eee", marginBottom: "24px" }}>
               <div style={{ fontSize: "0.9rem", fontWeight: "bold", marginBottom: "12px", color: "#333", display: "flex", justifyContent: "space-between" }}>
                 <span>🔍 条件で絞り込む</span>
-                {(filterFreq || filterTime || filterGenre) && (
+                {hasActiveFilters && (
                   <button onClick={clearFilters} style={{ background: "none", border: "none", color: "#ff4757", cursor: "pointer", fontSize: "0.85rem", textDecoration: "underline" }}>
                     × 条件をクリア
                   </button>
                 )}
               </div>
-              
+
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div className="filter-row">
+                  <span className="filter-label" style={{ alignSelf: "center" }}>検索:</span>
+                  <input type="text" placeholder="イベント名・内容で検索..." value={searchName} onChange={(e) => setSearchName(e.target.value)} className="input-search" />
+                </div>
                 <div className="filter-row">
                   <span className="filter-label">頻度:</span>
                   <div className="filter-options">
@@ -228,7 +270,7 @@ export default function EventListPage() {
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
               <p style={{ margin: 0, color: "#666", fontSize: "0.9rem" }}>
-                <b>{sortedEvents.length}</b> 件ヒット
+                {loading ? "読み込み中..." : <><b>{sortedEvents.length}</b> 件ヒット</>}
               </p>
               
               <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
@@ -248,7 +290,21 @@ export default function EventListPage() {
             </div>
           </div>
           
-          {sortedEvents.length === 0 ? (
+          {loading ? (
+            <div style={{ display: "grid", gap: "24px", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="card skeleton-card" style={{ padding: 0, overflow: "hidden" }}>
+                  <div className="skeleton-image" style={{ aspectRatio: "16/9" }}></div>
+                  <div style={{ padding: "16px" }}>
+                    <div className="skeleton-text" style={{ width: "40%" }}></div>
+                    <div className="skeleton-text" style={{ width: "80%", marginTop: "10px", height: "16px" }}></div>
+                    <div className="skeleton-text" style={{ width: "100%", marginTop: "12px" }}></div>
+                    <div className="skeleton-text" style={{ width: "60%", marginTop: "8px" }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : sortedEvents.length === 0 ? (
             <div className="card" style={{ textAlign: "center", padding: "60px" }}>
               <p>条件に一致するイベントはありませんでした。</p>
               <button onClick={clearFilters} className="btn btn-ghost" style={{ marginTop: "16px" }}>条件をリセットする</button>
@@ -268,13 +324,17 @@ export default function EventListPage() {
                          </span>
                       ))}
                     </div>
-                    {event.capacity && (
-                      <div style={{ position: "absolute", bottom: "8px", right: "8px" }}>
-                        <span style={{ background: "rgba(255,255,255,0.9)", color: "#333", padding: "4px 8px", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "bold", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}>
-                          残り {event.capacity}枠
-                        </span>
-                      </div>
-                    )}
+                    {event.capacity && (() => {
+                      const remaining = event.capacity - (event.acceptedCount || 0);
+                      const isFull = remaining <= 0;
+                      return (
+                        <div style={{ position: "absolute", bottom: "8px", right: "8px" }}>
+                          <span style={{ background: isFull ? "#ef4444" : "rgba(255,255,255,0.9)", color: isFull ? "#fff" : "#333", padding: "4px 8px", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "bold", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}>
+                            {isFull ? "🈵 満員" : `残り ${remaining}枠`}
+                          </span>
+                        </div>
+                      );
+                    })()}
                     {event.banner_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={event.banner_url} alt={event.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -311,6 +371,12 @@ export default function EventListPage() {
         </div>
       </main>
       <style jsx>{`
+        .input-search { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; width: 100%; max-width: 360px; }
+        .input-search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1); }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .skeleton-card { border: 1px solid #eee; background: #fff; overflow: hidden; }
+        .skeleton-image { width: 100%; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+        .skeleton-text { height: 12px; background: #eee; border-radius: 4px; }
         .filter-row { display: flex; align-items: flex-start; gap: 16px; }
         .filter-label { font-weight: bold; font-size: 0.9rem; color: #666; width: 60px; padding-top: 6px; flex-shrink: 0; }
         .filter-options { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
